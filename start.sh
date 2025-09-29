@@ -61,9 +61,10 @@ start_simple() {
     export APP_TIMEZONE=Europe/Rome
     export APP_LOG_LEVEL=info
     
-    # Avvia server in background
-    nohup node server/server.js > /dev/null 2>&1 &
+    # Avvia server in background completamente separato
+    node server/server.js > /dev/null 2>&1 &
     SERVER_PID=$!
+    disown $SERVER_PID
     
     # Salva PID
     echo $SERVER_PID > ../../../server.pid
@@ -129,9 +130,10 @@ start_complete() {
     export APP_TIMEZONE=Europe/Rome
     export APP_LOG_LEVEL=info
     
-    # Avvia server completo in background
-    nohup node server/pantryos-server.js > /dev/null 2>&1 &
+    # Avvia server completo in background completamente separato
+    node server/pantryos-server.js > /dev/null 2>&1 &
     SERVER_PID=$!
+    disown $SERVER_PID
     
     # Salva PID
     echo $SERVER_PID > ../../../server.pid
