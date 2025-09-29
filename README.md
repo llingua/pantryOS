@@ -1,11 +1,10 @@
-# PantryOS (Node Edition)
+# PantryOS
 
 [![GitHub Release][releases-shield]][releases]
 ![Project Stage][project-stage-shield]
 [![License][license-shield]](LICENSE.md)
 
 **🔁 REFRESHED ARCHITECTURE** – PantryOS è stato progettato interamente con **Node.js** e **React**.
-
 
 ## About
 
@@ -37,10 +36,43 @@ maniera semplice e visuale.
 
 # 🚀 Installazione
 
-1. Clona il repository `https://github.com/llingua/pantryos`
+1. Clona il repository `https://github.com/llingua/pantryOS`
 2. Installa le dipendenze Node.js (se previste)
-3. Avvia il server `node pantryos-addon/app/server/server.js`
+3. Usa gli script di gestione per avviare il server
 4. Accedi a `http://localhost:8080`
+
+## 📋 Script di gestione
+
+Il progetto include script di gestione per facilitare l'uso:
+
+### 🚀 Avvio
+
+```bash
+./start.sh              # Avvio semplice (default)
+./start.sh simple       # Avvio semplice (esplicito)
+./start.sh complete     # Avvio completo con tutte le funzionalità
+./start.sh help         # Mostra aiuto
+```
+
+### 🛑 Arresto
+
+```bash
+./stop.sh               # Ferma il server PantryOS
+```
+
+### 🔄 Riavvio
+
+```bash
+./restart.sh            # Riavvia in modalità semplice (default)
+./restart.sh simple     # Riavvia in modalità semplice
+./restart.sh complete   # Riavvia in modalità completa
+./restart.sh help       # Mostra aiuto
+```
+
+### 🎯 Modalità disponibili
+
+- **Semplice**: Server standalone con funzionalità base
+- **Completa**: Tutte le funzionalità API (locations, products, shopping list, tasks, etc.)
 
 ## 🔧 Configurazione
 
@@ -80,23 +112,16 @@ I dati persistenti vengono salvati in `/data/pantryos/state.json`.
 
 Per segnalazioni e proposte apri una issue nel repository GitHub ufficiale di PantryOS.
 
-## Contribuire
-
-Questo progetto è open-source e accoglie volentieri nuovi contributi! Consulta
-le nostre [linee guida per contribuire](.github/CONTRIBUTING.md) per iniziare.
-
 ## Autori e contributori
 
-## Autori e contributori
-
-PantryOS è un progetto indipendente creato da PantryOS Team.
+PantryOS è un progetto indipendente creato da **Luca Lingua** (llingua001@gmail.com).
 Contributi esterni sono benvenuti tramite pull request.
 
 ## Licenza
 
 MIT License
 
-Copyright (c) 2025 PantryOS
+Copyright (c) 2025 Luca Lingua
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -116,22 +141,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-[releases-shield]: https://img.shields.io/github/release/llingua/addon-pantryos.svg
-[releases]: https://github.com/llingua/addon-pantryos/releases
+[releases-shield]: https://img.shields.io/github/release/llingua/pantryOS.svg
+[releases]: https://github.com/llingua/pantryOS/releases
 [project-stage-shield]: https://img.shields.io/badge/project%20stage-experimental-orange.svg
-[license-shield]: https://img.shields.io/github/license/llingua/addon-pantryos.svg
+[license-shield]: https://img.shields.io/github/license/llingua/pantryOS.svg
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
 [armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
-[github-actions-shield]: https://github.com/llingua/addon-pantryos/workflows/CI/badge.svg
-[github-actions]: https://github.com/llingua/addon-pantryos/actions
+[github-actions-shield]: https://github.com/llingua/pantryOS/workflows/CI/badge.svg
+[github-actions]: https://github.com/llingua/pantryOS/actions
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg
-[commits-shield]: https://img.shields.io/github/commit-activity/y/llingua/addon-pantryos.svg
-[commits]: https://github.com/llingua/addon-pantryos/commits/main
+[commits-shield]: https://img.shields.io/github/commit-activity/y/llingua/pantryOS.svg
+[commits]: https://github.com/llingua/pantryOS/commits/main
 [discord]: https://discord.gg/c5DvZ4e
 [discord-ha]: https://discord.gg/home-assistant
 [forum]: https://community.home-assistant.io/?u=addon_pantryos
-[issue]: https://github.com/llingua/addon-pantryos/issues
+[issue]: https://github.com/llingua/pantryOS/issues
 [reddit]: https://www.reddit.com/r/homeassistant
 [frenck]: https://github.com/frenck
-[contributors]: https://github.com/llingua/addon-pantryos/graphs/contributors
+[contributors]: https://github.com/llingua/pantryOS/graphs/contributors
