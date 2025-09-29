@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PantryOS Node Edition</title>
+    <meta
+      name="description"
+      content="Gestione della dispensa per la casa basata su Node.js e React"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <noscript>Per utilizzare PantryOS è necessario abilitare JavaScript.</noscript>
+    <div id="root" class="app-root">
+      <div class="loading-screen">
+        <h2>PantryOS Node.js</h2>
+        <p>Caricamento librerie...</p>
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    <script src="./react.min.js"></script>
+    <script src="./react-dom.min.js"></script>
+    <script src="./quagga.min.js"></script>
+    <script src="./barcode-scanner.js"></script>
+    <script src="./pantryos-app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+---
+name: PantryOS
+version: dev
+slug: pantryos
+description: Gestione della dispensa con interfaccia React e backend Node.js
+url: https://github.com/llingua/addon-pantryos
+codenotary: codenotary@frenck.dev
+ingress: true
+ingress_stream: true
+init: false
+panel_icon: mdi:cart
+panel_admin: false
+arch:
+  - aarch64
+  - amd64
+  - armv7
+ports:
+  80/tcp: null
+ports_description:
+  80/tcp: Interfaccia web (non necessario con Ingress)
+options:
+  culture: it
+  currency: EUR
+  timezone: Europe/Rome
+  demo_data: true
+  log_level: info
+schema:
+  log_level: list(trace|debug|info|notice|warning|error|fatal)?
+  culture: list(ca|cs|da|de|el_GR|en|en_GB|es|et|fi|fr|he_IL|hu|it|ja|ko_KR|lt|nl|no|pl|pt_BR|pt_PT|ro|ru|sk_SK|sl|sv_SE|ta|tr|uk|zh_CN|zh_TW)
+  currency: match(^[A-Z]{3}$)
+  timezone: str?
+  demo_data: bool
