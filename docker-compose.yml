@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  pantryos-local:
+    build:
+      context: ./addon-pantryos/pantryos
+      dockerfile: Dockerfile
+    container_name: pantryos-local-test
+    ports:
+      - "8080:80"
+    environment:
+      # Simulazione ambiente Home Assistant
+      - NODE_ENV=development
+      - APP_HOST=0.0.0.0
+      - APP_PORT=80
+      - APP_DATA_FILE=/data/pantryos/state.json
+      - APP_PUBLIC_DIR=/opt/pantryos/public
+      - APP_BASE_PATH=/
+      - APP_CULTURE=it
+      - APP_CURRENCY=EUR
+      - APP_TIMEZONE=Europe/Rome
+      - APP_LOG_LEVEL=debug
+    volumes:
+      # Mount per dati persistenti
+      - ./data:/data
+      # Mount per sviluppo (opzionale)
+      - ./addon-pantryos/pantryos/app:/opt/pantryos:ro
+    networks:
+      - pantryos-network
+    restart: unless-stopped
+    labels:
+      - "homeassistant.io/addon=pantryos"
+      - "homeassistant.io/version=dev"
+
+  # Home Assistant Core (opzionale per test completo)
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ha-core-test
+    volumes:
+      - ./ha-config:/config
+    ports:
+      - "8123:8123"
+    networks:
+      - pantryos-network
+    environment:
+      - TZ=Europe/Rome
+    restart: unless-stopped
+
+networks:
+  pantryos-network:
+    driver: bridge
+
+volumes:
+  pantryos-data:
+    driver: local

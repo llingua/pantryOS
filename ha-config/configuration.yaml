@@ -1,0 +1,114 @@
+# Home Assistant Configuration per test PantryOS
+default_config:
+
+# Configurazione per addon PantryOS
+homeassistant:
+  name: Home Assistant Test
+  latitude: 45.4642
+  longitude: 9.1900
+  elevation: 120
+  unit_system: metric
+  time_zone: Europe/Rome
+  country: IT
+  language: it
+
+# Abilita API
+api:
+  use_ssl: false
+
+# Configurazione per test
+logger:
+  default: info
+  logs:
+    homeassistant.components.api: debug
+
+# Configurazione ingress
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 10.0.0.0/8
+
+# Configurazione per test PantryOS
+sensor:
+  - platform: rest
+    name: 'PantryOS Health'
+    resource: 'http://pantryos-local:80/api/health'
+    value_template: '{{ value_json.status }}'
+    scan_interval: 30
+
+  - platform: rest
+    name: 'PantryOS Items Count'
+    resource: 'http://pantryos-local:80/api/state'
+    value_template: '{{ value_json.summary.items }}'
+    scan_interval: 60
+
+  - platform: rest
+    name: 'PantryOS Shopping List Count'
+    resource: 'http://pantryos-local:80/api/state'
+    value_template: '{{ value_json.summary.shoppingList }}'
+    scan_interval: 60
+
+  - platform: rest
+    name: 'PantryOS Open Tasks'
+    resource: 'http://pantryos-local:80/api/state'
+    value_template: '{{ value_json.summary.openTasks }}'
+    scan_interval: 60
+
+# Configurazione per test addon
+input_boolean:
+  pantryos_test_mode:
+    name: 'PantryOS Test Mode'
+    initial: true
+
+# Script per test PantryOS
+script:
+  test_pantryos_api:
+    alias: 'Test PantryOS API'
+    sequence:
+      - service: rest_command.call_pantryos_health
+      - delay: 2
+      - service: rest_command.call_pantryos_state
+
+# REST commands per test
+rest_command:
+  call_pantryos_health:
+    url: 'http://pantryos-local:80/api/health'
+    method: GET
+    headers:
+      Content-Type: 'application/json'
+
+  call_pantryos_state:
+    url: 'http://pantryos-local:80/api/state'
+    method: GET
+    headers:
+      Content-Type: 'application/json'
+
+  add_pantryos_item:
+    url: 'http://pantryos-local:80/api/items'
+    method: POST
+    headers:
+      Content-Type: 'application/json'
+    payload: |
+      {
+        "name": "{{ name }}",
+        "quantity": {{ quantity | default(1) }},
+        "location": "{{ location | default('Dispensa') }}",
+        "bestBefore": "{{ bestBefore | default('') }}"
+      }
+
+  update_pantryos_item:
+    url: 'http://pantryos-local:80/api/items/{{ item_id }}'
+    method: PATCH
+    headers:
+      Content-Type: 'application/json'
+    payload: |
+      {
+        "name": "{{ name }}",
+        "quantity": {{ quantity }},
+        "location": "{{ location }}",
+        "bestBefore": "{{ bestBefore }}"
+      }
