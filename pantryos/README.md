@@ -6,7 +6,6 @@
 
 **🔁 REFRESHED ARCHITECTURE** – PantryOS è stato progettato interamente con **Node.js** e **React**.
 
-![PantryOS screenshot](images/screenshot.gif)
 
 ## About
 
