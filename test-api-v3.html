@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Open Facts API v3</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Open Facts API v3</h1>
+
+        <div class="test-section">
+            <h3>🔍 Test Ricerca Prodotto</h3>
+            <input type="text" id="barcode-input" placeholder="Inserisci barcode (es. 3017620422003)" value="3017620422003">
+            <button onclick="testProductSearch()">Cerca Prodotto</button>
+            <button onclick="testMultipleBarcodes()">Test Multipli Barcode</button>
+            <div id="search-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌍 Test Lingue e Paesi</h3>
+            <div style="margin: 10px 0;">
+                <label for="language-select" style="margin-right: 10px;"><strong>Lingua:</strong></label>
+                <select id="language-select" onchange="changeLanguage()">
+                    <option value="it">🇮🇹 Italiano</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                </select>
+                <span id="current-language"></span>
+            </div>
+            <div style="margin: 10px 0;">
+                <label for="country-select" style="margin-right: 10px;"><strong>Paese:</strong></label>
+                <select id="country-select" onchange="changeCountry()">
+                    <option value="it">🇮🇹 Italia</option>
+                    <option value="us">🇺🇸 USA</option>
+                    <option value="gb">🇬🇧 Regno Unito</option>
+                    <option value="fr">🇫🇷 Francia</option>
+                    <option value="de">🇩🇪 Germania</option>
+                    <option value="es">🇪🇸 Spagna</option>
+                </select>
+                <span id="current-country"></span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Informazioni Cache</h3>
+            <button onclick="showCacheInfo()">Mostra Cache</button>
+            <button onclick="clearCache()">Pulisci Cache</button>
+            <div id="cache-info" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Test Configurazione</h3>
+            <button onclick="testConfig()">Test Config App</button>
+            <div id="config-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="./pantryos/pantryos-addon/app/public/utils/open-facts-api.js"></script>
+    <script>
+        // Barcode di test comuni
+        const testBarcodes = [
+            { code: '3017620422003', name: 'Nutella' },
+            { code: '8076809510001', name: 'Coca Cola' },
+            { code: '8000500310427', name: 'Barilla Pasta' },
+            { code: '8001090300000', name: 'Parmigiano Reggiano' },
+            { code: '8001090300000', name: 'Parmigiano Reggiano' }
+        ];
+
+        async function testProductSearch() {
+            const barcode = document.getElementById('barcode-input').value.trim();
+            if (!barcode) {
+                showResult('search-result', 'error', '❌ Inserisci un barcode');
+                return;
+            }
+
+            showResult('search-result', 'info', '🔍 Ricerca in corso...');
+
+            try {
+                console.log('🔍 Test ricerca prodotto:', barcode);
+                const result = await OpenFactsAPI.searchProductByBarcode(barcode);
+
+                if (result && !result.error) {
+                    showResult('search-result', 'success',
+                        `✅ Prodotto trovato!\n\n` +
+                        `📦 Nome: ${result.name}\n` +
+                        `🏷️ Marca: ${result.brand || 'N/A'}\n` +
+                        `📝 Descrizione: ${result.description || 'N/A'}\n` +
+                        `🌍 Lingua: ${result.languageName} (${result.language})\n` +
+                        `🔗 Fonte: ${result.source}\n` +
+                        `🖼️ Immagine: ${result.imageUrl ? '✅' : '❌'}\n` +
+                        `📊 Dati completi: ${JSON.stringify(result, null, 2)}`
+                    );
+                } else {
+                    showResult('search-result', 'error',
+                        `❌ Prodotto non trovato: ${result?.error || 'Errore sconosciuto'}`
+                    );
+                }
+            } catch (error) {
+                showResult('search-result', 'error', `❌ Errore: ${error.message}`);
+            }
+        }
+
+        async function testMultipleBarcodes() {
+            showResult('search-result', 'info', '🔍 Test multipli barcode...');
+
+            for (const test of testBarcodes) {
+                try {
+                    console.log(`🔍 Test: ${test.name} (${test.code})`);
+                    const result = await OpenFactsAPI.searchProductByBarcode(test.code);
+
+                    if (result && !result.error) {
+                        console.log(`✅ ${test.name}: ${result.name}`);
+                    } else {
+                        console.log(`❌ ${test.name}: Non trovato`);
+                    }
+                } catch (error) {
+                    console.log(`❌ ${test.name}: Errore - ${error.message}`);
+                }
+
+                // Pausa tra le richieste per non sovraccaricare l'API
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            showResult('search-result', 'success', '✅ Test multipli completati! Controlla la console per i dettagli.');
+        }
+
+        async function changeLanguage() {
+            const langSelect = document.getElementById('language-select');
+            const selectedLang = langSelect.value;
+
+            if (OpenFactsAPI.setLanguage(selectedLang)) {
+                await updateLanguageDisplay();
+                showResult('search-result', 'info', `🌍 Lingua cambiata a: ${OpenFactsAPI.getSupportedLanguages()[selectedLang]}`);
+            } else {
+                showResult('search-result', 'error', `❌ Lingua non supportata: ${selectedLang}`);
+            }
+        }
+
+        async function changeCountry() {
+            const countrySelect = document.getElementById('country-select');
+            const selectedCountry = countrySelect.value;
+
+            if (OpenFactsAPI.setCountry(selectedCountry)) {
+                await updateCountryDisplay();
+                showResult('search-result', 'info', `🏳️ Paese cambiato a: ${selectedCountry}`);
+            } else {
+                showResult('search-result', 'error', `❌ Paese non supportato: ${selectedCountry}`);
+            }
+        }
+
+        async function updateLanguageDisplay() {
+            const currentLang = OpenFactsAPI.getLanguage();
+            const langSelect = document.getElementById('language-select');
+            const currentLangSpan = document.getElementById('current-language');
+
+            langSelect.value = currentLang;
+            const supportedLangs = OpenFactsAPI.getSupportedLanguages();
+            currentLangSpan.textContent = `(Attuale: ${supportedLangs[currentLang] || currentLang})`;
+        }
+
+        async function updateCountryDisplay() {
+            const currentCountry = OpenFactsAPI.getCountry();
+            const countrySelect = document.getElementById('country-select');
+            const currentCountrySpan = document.getElementById('current-country');
+
+            countrySelect.value = currentCountry;
+            currentCountrySpan.textContent = `(Attuale: ${currentCountry})`;
+        }
+
+        async function testConfig() {
+            showResult('config-result', 'info', '🔧 Test configurazione...');
+
+            try {
+                await OpenFactsAPI.reloadConfig();
+                const currentLang = OpenFactsAPI.getLanguage();
+                const currentCountry = OpenFactsAPI.getCountry();
+                const supportedLangs = OpenFactsAPI.getSupportedLanguages();
+
+                showResult('config-result', 'success',
+                    `✅ Configurazione caricata!\n\n` +
+                    `🌍 Lingua corrente: ${supportedLangs[currentLang]} (${currentLang})\n` +
+                    `🏳️ Paese corrente: ${currentCountry}\n` +
+                    `🔧 Configurazione ricaricata con successo`
+                );
+            } catch (error) {
+                showResult('config-result', 'error', `❌ Errore configurazione: ${error.message}`);
+            }
+        }
+
+        function showCacheInfo() {
+            const cache = OpenFactsAPI.getCacheInfo();
+            showResult('cache-info', 'info',
+                `📊 Informazioni Cache:\n\n` +
+                `📦 Elementi in cache: ${cache.size}\n` +
+                `⏰ Durata cache: 24 ore\n` +
+                `🌍 Lingua: ${cache.currentLanguage}\n` +
+                `🏳️ Paese: ${cache.currentCountry}\n` +
+                `🔍 Chiavi: ${Array.from(cache.keys()).join(', ') || 'Nessuna'}`
+            );
+        }
+
+        function clearCache() {
+            OpenFactsAPI.clearCache();
+            showResult('cache-info', 'success', '✅ Cache pulita!');
+        }
+
+        function showResult(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+            element.innerHTML = `<pre>${message}</pre>`;
+        }
+
+        // Inizializzazione
+        window.addEventListener('load', async () => {
+            await updateLanguageDisplay();
+            await updateCountryDisplay();
+            showCacheInfo();
+        });
+    </script>
+</body>
+</html>

@@ -14,11 +14,13 @@ const PORT = Number.parseInt(process.env.APP_PORT || '80', 10);
 const BASE_PATH_RAW = process.env.APP_BASE_PATH || '/';
 const BASE_PATH = BASE_PATH_RAW === '/' ? '' : BASE_PATH_RAW.replace(/\/$/, '');
 const LOG_LEVEL = (process.env.APP_LOG_LEVEL || 'info').toLowerCase();
+const CONFIG_FILE = process.env.APP_CONFIG_FILE || path.join(__dirname, '../data/config.json');
 
-const CONFIG = {
+let CONFIG = {
     culture: process.env.APP_CULTURE || 'en',
     currency: process.env.APP_CURRENCY || 'USD',
-    timezone: process.env.APP_TIMEZONE || 'UTC'
+    timezone: process.env.APP_TIMEZONE || 'UTC',
+    logLevel: LOG_LEVEL
 };
 
 // Schema completo PantryOS
@@ -30,7 +32,7 @@ const defaultState = {
     items: [],
     shoppingList: [],
     tasks: [],
-    
+
     // Configurazione
     locations: [],
     productGroups: [],
@@ -38,12 +40,12 @@ const defaultState = {
     shoppingLocations: [],
     barcodes: [],
     products: [],
-    
+
     // Automazioni
     stockLog: [],
     consumptionLog: [],
     shoppingListLog: [],
-    
+
     // Ricette e pasti
     recipes: [],
     mealPlans: [],
@@ -81,6 +83,45 @@ async function loadSchema() {
     }
 }
 
+// Config load/save
+async function loadConfig() {
+    const defaults = {
+        culture: process.env.APP_CULTURE || 'en',
+        currency: process.env.APP_CURRENCY || 'USD',
+        timezone: process.env.APP_TIMEZONE || 'UTC',
+        logLevel: LOG_LEVEL
+    };
+
+    try {
+        const raw = await fs.promises.readFile(CONFIG_FILE, 'utf-8');
+        const fileConfig = JSON.parse(raw);
+        CONFIG = { ...defaults, ...fileConfig };
+        log('info', 'Config file loaded');
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            // Persist defaults on first run
+            await writeConfig(defaults);
+            CONFIG = { ...defaults };
+            log('notice', 'Config file not found, created with defaults');
+        } else {
+            log('warning', 'Unable to read config file, using defaults', err.message);
+            CONFIG = { ...defaults };
+        }
+    }
+}
+
+async function writeConfig(config) {
+    const safe = {
+        culture: String(config.culture || 'en').trim() || 'en',
+        currency: String(config.currency || 'USD').trim() || 'USD',
+        timezone: String(config.timezone || 'UTC').trim() || 'UTC',
+        logLevel: String(config.logLevel || LOG_LEVEL).toLowerCase()
+    };
+    await fs.promises.mkdir(path.dirname(CONFIG_FILE), { recursive: true });
+    await fs.promises.writeFile(CONFIG_FILE, `${JSON.stringify(safe, null, 2)}\n`, 'utf-8');
+    CONFIG = safe;
+}
+
 // Gestione stato
 async function ensureDataDirectory() {
     try {
@@ -95,7 +136,7 @@ async function readStateFromDisk() {
     try {
         const raw = await fs.promises.readFile(DATA_FILE, 'utf-8');
         const state = JSON.parse(raw);
-        
+
         // Merge con schema se necessario
         if (SCHEMA.locations && SCHEMA.locations.length > 0) {
             state.locations = SCHEMA.locations;
@@ -115,7 +156,7 @@ async function readStateFromDisk() {
         if (SCHEMA.products && SCHEMA.products.length > 0) {
             state.products = SCHEMA.products;
         }
-        
+
         return state;
     } catch (err) {
         if (err.code === 'ENOENT') {
@@ -266,13 +307,42 @@ async function handleApi(req, res, pathname) {
         return true;
     }
 
+    if (pathname === '/api/config' && (req.method === 'PATCH' || req.method === 'PUT')) {
+        try {
+            const body = await parseJsonBody(req);
+            const next = {
+                culture: body.culture !== undefined ? String(body.culture).trim() : CONFIG.culture,
+                currency: body.currency !== undefined ? String(body.currency).trim() : CONFIG.currency,
+                timezone: body.timezone !== undefined ? String(body.timezone).trim() : CONFIG.timezone,
+                logLevel: body.logLevel !== undefined ? String(body.logLevel).toLowerCase().trim() : CONFIG.logLevel,
+            };
+
+            if (!next.culture) {
+                return sendError(res, 400, 'Parametro "culture" non valido');
+            }
+            if (!next.currency) {
+                return sendError(res, 400, 'Parametro "currency" non valido');
+            }
+            if (!next.timezone) {
+                return sendError(res, 400, 'Parametro "timezone" non valido');
+            }
+
+            await writeConfig(next);
+            sendJson(res, 200, { ...CONFIG });
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update config', err);
+            sendError(res, 400, 'Impossibile aggiornare la configurazione', err.message);
+            return true;
+        }
+    }
+
     // Stato completo
     if (pathname === '/api/state' && req.method === 'GET') {
         const state = await getState();
         const summary = {
             items: state.items?.length || 0,
             shoppingList: state.shoppingList?.length || 0,
-            openTasks: state.tasks?.filter((task) => !task.completed)?.length || 0,
             locations: state.locations?.length || 0,
             products: state.products?.length || 0,
             recipes: state.recipes?.length || 0
@@ -318,6 +388,49 @@ async function handleApi(req, res, pathname) {
         }
     }
 
+    if (pathname.startsWith('/api/locations/') && req.method === 'PATCH') {
+        const id = pathname.split('/').pop();
+        try {
+            const body = await parseJsonBody(req);
+            const updated = await mutateState((state) => {
+                return findAndUpdate(state.locations, id, (location) => {
+                    const changes = {};
+                    if (body.name !== undefined) changes.name = String(body.name).trim() || location.name;
+                    if (body.description !== undefined) changes.description = String(body.description).trim();
+                    if (body.isFreezer !== undefined) changes.isFreezer = Boolean(body.isFreezer);
+                    return changes;
+                });
+            });
+            if (!updated) {
+                sendError(res, 404, 'Location non trovata');
+                return true;
+            }
+            sendJson(res, 200, updated);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update location', err);
+            sendError(res, 400, 'Impossibile aggiornare la location', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/locations/') && req.method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        const removed = await mutateState((state) => {
+            const index = state.locations.findIndex((l) => l.id === id);
+            if (index === -1) return false;
+            state.locations.splice(index, 1);
+            return true;
+        });
+        if (!removed) {
+            sendError(res, 404, 'Location non trovata');
+            return true;
+        }
+        res.statusCode = 204;
+        res.end();
+        return true;
+    }
+
     // API Product Groups
     if (pathname === '/api/product-groups' && req.method === 'GET') {
         const state = await getState();
@@ -352,6 +465,48 @@ async function handleApi(req, res, pathname) {
             sendError(res, 400, 'Impossibile aggiungere il gruppo', err.message);
             return true;
         }
+    }
+
+    if (pathname.startsWith('/api/product-groups/') && req.method === 'PATCH') {
+        const id = pathname.split('/').pop();
+        try {
+            const body = await parseJsonBody(req);
+            const updated = await mutateState((state) => {
+                return findAndUpdate(state.productGroups, id, (group) => {
+                    const changes = {};
+                    if (body.name !== undefined) changes.name = String(body.name).trim() || group.name;
+                    if (body.description !== undefined) changes.description = String(body.description).trim();
+                    return changes;
+                });
+            });
+            if (!updated) {
+                sendError(res, 404, 'Gruppo non trovato');
+                return true;
+            }
+            sendJson(res, 200, updated);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update product group', err);
+            sendError(res, 400, 'Impossibile aggiornare il gruppo', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/product-groups/') && req.method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        const removed = await mutateState((state) => {
+            const index = state.productGroups.findIndex((g) => g.id === id);
+            if (index === -1) return false;
+            state.productGroups.splice(index, 1);
+            return true;
+        });
+        if (!removed) {
+            sendError(res, 404, 'Gruppo non trovato');
+            return true;
+        }
+        res.statusCode = 204;
+        res.end();
+        return true;
     }
 
     // API Quantity Units
@@ -392,6 +547,128 @@ async function handleApi(req, res, pathname) {
         }
     }
 
+    if (pathname.startsWith('/api/quantity-units/') && req.method === 'PATCH') {
+        const id = pathname.split('/').pop();
+        try {
+            const body = await parseJsonBody(req);
+            const updated = await mutateState((state) => {
+                return findAndUpdate(state.quantityUnits, id, (unit) => {
+                    const changes = {};
+                    if (body.name !== undefined) changes.name = String(body.name).trim() || unit.name;
+                    if (body.namePlural !== undefined) changes.namePlural = String(body.namePlural).trim() || unit.namePlural;
+                    if (body.description !== undefined) changes.description = String(body.description).trim();
+                    if (body.isInteger !== undefined) changes.isInteger = Boolean(body.isInteger);
+                    return changes;
+                });
+            });
+            if (!updated) {
+                sendError(res, 404, 'Unità non trovata');
+                return true;
+            }
+            sendJson(res, 200, updated);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update quantity unit', err);
+            sendError(res, 400, 'Impossibile aggiornare l\'unità', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/quantity-units/') && req.method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        const removed = await mutateState((state) => {
+            const index = state.quantityUnits.findIndex((u) => u.id === id);
+            if (index === -1) return false;
+            state.quantityUnits.splice(index, 1);
+            return true;
+        });
+        if (!removed) {
+            sendError(res, 404, 'Unità non trovata');
+            return true;
+        }
+        res.statusCode = 204;
+        res.end();
+        return true;
+    }
+
+    // API Shopping Locations (Negozi)
+    if (pathname === '/api/shopping-locations' && req.method === 'GET') {
+        const state = await getState();
+        sendJson(res, 200, state.shoppingLocations);
+        return true;
+    }
+
+    if (pathname === '/api/shopping-locations' && req.method === 'POST') {
+        try {
+            const body = await parseJsonBody(req);
+            const name = (body.name || '').trim();
+            if (!name) {
+                sendError(res, 400, 'Il nome del negozio è obbligatorio');
+                return true;
+            }
+
+            const newShop = await mutateState((state) => {
+                const shop = {
+                    id: crypto.randomUUID(),
+                    name,
+                    description: (body.description || '').trim(),
+                    createdAt: new Date().toISOString(),
+                };
+                state.shoppingLocations.push(shop);
+                return shop;
+            });
+
+            sendJson(res, 201, newShop);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to add shopping location', err);
+            sendError(res, 400, 'Impossibile aggiungere il negozio', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/shopping-locations/') && req.method === 'PATCH') {
+        const id = pathname.split('/').pop();
+        try {
+            const body = await parseJsonBody(req);
+            const updated = await mutateState((state) => {
+                return findAndUpdate(state.shoppingLocations, id, (shop) => {
+                    const changes = {};
+                    if (body.name !== undefined) changes.name = String(body.name).trim() || shop.name;
+                    if (body.description !== undefined) changes.description = String(body.description).trim();
+                    return changes;
+                });
+            });
+            if (!updated) {
+                sendError(res, 404, 'Negozio non trovato');
+                return true;
+            }
+            sendJson(res, 200, updated);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update shopping location', err);
+            sendError(res, 400, 'Impossibile aggiornare il negozio', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/shopping-locations/') && req.method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        const removed = await mutateState((state) => {
+            const index = state.shoppingLocations.findIndex((s) => s.id === id);
+            if (index === -1) return false;
+            state.shoppingLocations.splice(index, 1);
+            return true;
+        });
+        if (!removed) {
+            sendError(res, 404, 'Negozio non trovato');
+            return true;
+        }
+        res.statusCode = 204;
+        res.end();
+        return true;
+    }
+
     // API Products
     if (pathname === '/api/products' && req.method === 'GET') {
         const state = await getState();
@@ -412,6 +689,7 @@ async function handleApi(req, res, pathname) {
                 const product = {
                     id: crypto.randomUUID(),
                     name,
+                    barcode: body.barcode ? (body.barcode || '').trim() : null,
                     description: (body.description || '').trim(),
                     productGroupId: body.productGroupId || null,
                     quantityUnitId: body.quantityUnitId || null,
@@ -434,6 +712,138 @@ async function handleApi(req, res, pathname) {
             sendError(res, 400, 'Impossibile aggiungere il prodotto', err.message);
             return true;
         }
+    }
+
+    if (pathname.startsWith('/api/products/') && req.method === 'PATCH') {
+        const id = pathname.split('/').pop();
+        try {
+            const body = await parseJsonBody(req);
+            const updated = await mutateState((state) => {
+                return findAndUpdate(state.products, id, (product) => {
+                    const changes = {};
+                    if (body.name !== undefined) changes.name = String(body.name).trim() || product.name;
+                    if (body.barcode !== undefined) changes.barcode = body.barcode ? String(body.barcode).trim() : null;
+                    if (body.description !== undefined) changes.description = String(body.description).trim();
+                    if (body.productGroupId !== undefined) changes.productGroupId = body.productGroupId || null;
+                    if (body.quantityUnitId !== undefined) changes.quantityUnitId = body.quantityUnitId || null;
+                    if (body.shoppingLocationId !== undefined) changes.shoppingLocationId = body.shoppingLocationId || null;
+                    if (body.minStockAmount !== undefined) changes.minStockAmount = sanitizeNumber(body.minStockAmount, product.minStockAmount);
+                    if (body.quFactorPurchaseToStock !== undefined) changes.quFactorPurchaseToStock = sanitizeNumber(body.quFactorPurchaseToStock, product.quFactorPurchaseToStock);
+                    if (body.quFactorPurchaseToStockId !== undefined) changes.quFactorPurchaseToStockId = body.quFactorPurchaseToStockId || null;
+                    if (body.quFactorStockToConsume !== undefined) changes.quFactorStockToConsume = sanitizeNumber(body.quFactorStockToConsume, product.quFactorStockToConsume);
+                    if (body.quFactorStockToConsumeId !== undefined) changes.quFactorStockToConsumeId = body.quFactorStockToConsumeId || null;
+                    return changes;
+                });
+            });
+            if (!updated) {
+                sendError(res, 404, 'Prodotto non trovato');
+                return true;
+            }
+            sendJson(res, 200, updated);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update product', err);
+            sendError(res, 400, 'Impossibile aggiornare il prodotto', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/products/') && req.method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        const removed = await mutateState((state) => {
+            const index = state.products.findIndex((p) => p.id === id);
+            if (index === -1) return false;
+            state.products.splice(index, 1);
+            return true;
+        });
+        if (!removed) {
+            sendError(res, 404, 'Prodotto non trovato');
+            return true;
+        }
+        res.statusCode = 204;
+        res.end();
+        return true;
+    }
+
+    // API Chores (Faccende)
+    if (pathname === '/api/chores' && req.method === 'GET') {
+        const state = await getState();
+        sendJson(res, 200, state.chores || []);
+        return true;
+    }
+
+    if (pathname === '/api/chores' && req.method === 'POST') {
+        try {
+            const body = await parseJsonBody(req);
+            const name = (body.name || '').trim();
+            if (!name) {
+                sendError(res, 400, 'Il nome della faccenda è obbligatorio');
+                return true;
+            }
+            const chore = await mutateState((state) => {
+                const entry = {
+                    id: crypto.randomUUID(),
+                    name,
+                    description: (body.description || '').trim(),
+                    periodDays: sanitizeNumber(body.periodDays, 0),
+                    createdAt: new Date().toISOString(),
+                };
+                state.chores = state.chores || [];
+                state.chores.push(entry);
+                return entry;
+            });
+            sendJson(res, 201, chore);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to add chore', err);
+            sendError(res, 400, 'Impossibile aggiungere la faccenda', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/chores/') && req.method === 'PATCH') {
+        const id = pathname.split('/').pop();
+        try {
+            const body = await parseJsonBody(req);
+            const updated = await mutateState((state) => {
+                state.chores = state.chores || [];
+                return findAndUpdate(state.chores, id, (chore) => {
+                    const changes = {};
+                    if (body.name !== undefined) changes.name = String(body.name).trim() || chore.name;
+                    if (body.description !== undefined) changes.description = String(body.description).trim();
+                    if (body.periodDays !== undefined) changes.periodDays = sanitizeNumber(body.periodDays, chore.periodDays);
+                    return changes;
+                });
+            });
+            if (!updated) {
+                sendError(res, 404, 'Faccenda non trovata');
+                return true;
+            }
+            sendJson(res, 200, updated);
+            return true;
+        } catch (err) {
+            log('error', 'Failed to update chore', err);
+            sendError(res, 400, 'Impossibile aggiornare la faccenda', err.message);
+            return true;
+        }
+    }
+
+    if (pathname.startsWith('/api/chores/') && req.method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        const removed = await mutateState((state) => {
+            state.chores = state.chores || [];
+            const index = state.chores.findIndex((c) => c.id === id);
+            if (index === -1) return false;
+            state.chores.splice(index, 1);
+            return true;
+        });
+        if (!removed) {
+            sendError(res, 404, 'Faccenda non trovata');
+            return true;
+        }
+        res.statusCode = 204;
+        res.end();
+        return true;
     }
 
     // API Barcodes
@@ -551,42 +961,7 @@ async function handleApi(req, res, pathname) {
         }
     }
 
-    // Tasks API
-    if (pathname === '/api/tasks' && req.method === 'GET') {
-        const state = await getState();
-        sendJson(res, 200, state.tasks);
-        return true;
-    }
-
-    if (pathname === '/api/tasks' && req.method === 'POST') {
-        try {
-            const body = await parseJsonBody(req);
-            const name = (body.name || '').trim();
-            if (!name) {
-                sendError(res, 400, 'Il nome dell\'attività è obbligatorio');
-                return true;
-            }
-
-            const task = await mutateState((state) => {
-                const entry = {
-                    id: crypto.randomUUID(),
-                    name,
-                    dueDate: (body.dueDate || '').trim() || null,
-                    completed: Boolean(body.completed),
-                    createdAt: new Date().toISOString()
-                };
-                state.tasks.push(entry);
-                return entry;
-            });
-
-            sendJson(res, 201, task);
-            return true;
-        } catch (err) {
-            log('error', 'Failed to create task', err);
-            sendError(res, 400, 'Impossibile aggiungere l\'attività', err.message);
-            return true;
-        }
-    }
+    // Tasks API removed (semplificazione)
 
     return false;
 }
@@ -660,6 +1035,7 @@ const server = http.createServer(async (req, res) => {
 // Inizializzazione
 async function initialize() {
     await loadSchema();
+    await loadConfig();
     log('info', 'PantryOS Node.js server initialized with full functionality');
 }
 

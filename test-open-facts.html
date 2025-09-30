@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+    <title>Test Open Facts API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .product-info {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .product-image {
+            text-align: center;
+        }
+        .product-image img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+        }
+        .product-details h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .nutrition-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Open Facts API Integration</h1>
+
+    <div class="test-section">
+        <h2>Test Ricerca Prodotto</h2>
+        <p>Inserisci un barcode per testare l'integrazione con Open Food Facts, Open Beauty Facts e Open Product Facts:</p>
+
+        <div style="margin: 15px 0;">
+            <label for="language-select" style="margin-right: 10px;"><strong>🌍 Lingua:</strong></label>
+            <select id="language-select" onchange="changeLanguage()" style="padding: 5px; margin-right: 15px;">
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ar">🇸🇦 العربية</option>
+            </select>
+            <span id="current-language" style="color: #666; font-size: 14px;"></span>
+        </div>
+
+        <div>
+            <input type="text" id="barcode-input" placeholder="Inserisci barcode (es. 3017620422003)" value="3017620422003">
+            <button onclick="testProductSearch()">🔍 Cerca Prodotto</button>
+            <button onclick="clearResults()">🗑️ Pulisci</button>
+        </div>
+
+        <div id="search-status"></div>
+        <div id="search-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Barcode Comuni</h2>
+        <p>Clicca su un barcode per testarlo rapidamente:</p>
+        <div>
+            <button onclick="testBarcode('3017620422003')">Nutella (3017620422003)</button>
+            <button onclick="testBarcode('8001090320000')">Coca Cola (8001090320000)</button>
+            <button onclick="testBarcode('8076809518581')">Barilla Pasta (8076809518581)</button>
+            <button onclick="testBarcode('8000500310427')">Parmigiano Reggiano (8000500310427)</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Informazioni Cache e Configurazione</h2>
+        <button onclick="showCacheInfo()">📊 Mostra Info Cache</button>
+        <button onclick="clearCache()">🗑️ Pulisci Cache</button>
+        <button onclick="reloadAppConfig()">🔄 Ricarica Config App</button>
+        <div id="cache-info"></div>
+    </div>
+
+    <script src="./pantryos/pantryos-addon/app/public/utils/open-facts-api.js"></script>
+
+    <script>
+        let isSearching = false;
+
+        function testBarcode(barcode) {
+            document.getElementById('barcode-input').value = barcode;
+            testProductSearch();
+        }
+
+        async function testProductSearch() {
+            if (isSearching) return;
+
+            const barcode = document.getElementById('barcode-input').value.trim();
+            if (!barcode) {
+                showStatus('error', 'Inserisci un barcode valido');
+                return;
+            }
+
+            isSearching = true;
+            showStatus('info', '🔍 Ricerca in corso...');
+            clearResults();
+
+            try {
+                const startTime = Date.now();
+                const productData = await OpenFactsAPI.searchProductByBarcode(barcode);
+                const searchTime = Date.now() - startTime;
+
+                showStatus('success', `✅ Prodotto trovato in ${productData.source} (${searchTime}ms)`);
+                displayProductData(productData);
+
+            } catch (error) {
+                showStatus('error', `❌ Errore: ${error.message}`);
+            } finally {
+                isSearching = false;
+            }
+        }
+
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('search-status');
+            statusDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function displayProductData(productData) {
+            const resultsDiv = document.getElementById('search-results');
+
+            const nutritionInfo = OpenFactsAPI.formatNutritionInfo(productData);
+
+            resultsDiv.innerHTML = `
+                <div class="product-info">
+                    <div class="product-image">
+                        ${productData.imageUrl ?
+                            `<img src="${productData.imageSmallUrl || productData.imageUrl}" alt="${productData.name}" onerror="this.style.display='none'">` :
+                            '<div style="width: 200px; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">Nessuna immagine</div>'
+                        }
+                    </div>
+                    <div class="product-details">
+                        <h3>${productData.name || 'Nome non disponibile'}</h3>
+                        ${productData.brand ? `<p><strong>Marca:</strong> ${productData.brand}</p>` : ''}
+                        ${productData.description ? `<p><strong>Descrizione:</strong> ${productData.description}</p>` : ''}
+                        ${productData.categories ? `<p><strong>Categorie:</strong> ${productData.categories}</p>` : ''}
+                        ${productData.quantity ? `<p><strong>Quantità:</strong> ${productData.quantity}</p>` : ''}
+                        ${productData.countries ? `<p><strong>Paesi:</strong> ${productData.countries}</p>` : ''}
+                        ${productData.labels ? `<p><strong>Etichette:</strong> ${productData.labels}</p>` : ''}
+                        <p><strong>Fonte:</strong> ${productData.source}</p>
+                        <p><strong>Lingua:</strong> ${productData.languageName || productData.language} (${productData.language})</p>
+                        ${productData.url ? `<p><strong>Link:</strong> <a href="${productData.url}" target="_blank">Apri su ${productData.source}</a></p>` : ''}
+                    </div>
+                </div>
+                ${nutritionInfo ? `
+                    <div class="nutrition-info">
+                        <h4>🍎 Informazioni Nutrizionali</h4>
+                        <p>${nutritionInfo}</p>
+                    </div>
+                ` : ''}
+                ${productData.ingredients ? `
+                    <div class="nutrition-info">
+                        <h4>🥘 Ingredienti</h4>
+                        <p>${productData.ingredients}</p>
+                    </div>
+                ` : ''}
+                ${productData.allergens ? `
+                    <div class="nutrition-info">
+                        <h4>⚠️ Allergeni</h4>
+                        <p>${productData.allergens}</p>
+                    </div>
+                ` : ''}
+                <details>
+                    <summary>🔧 Dati Tecnici</summary>
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(productData.rawData, null, 2)}</pre>
+                </details>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('search-results').innerHTML = '';
+        }
+
+        function showCacheInfo() {
+            const cacheInfo = OpenFactsAPI.getCacheInfo();
+            document.getElementById('cache-info').innerHTML = `
+                <div class="result info">
+                    <strong>Cache Info:</strong><br>
+                    Elementi in cache: ${cacheInfo.size}<br>
+                    Barcode: ${cacheInfo.entries.join(', ') || 'Nessuno'}
+                </div>
+            `;
+        }
+
+        function clearCache() {
+            OpenFactsAPI.clearCache();
+            showCacheInfo();
+        }
+
+        async function reloadAppConfig() {
+            showStatus('info', '🔄 Ricaricamento configurazione app...');
+            try {
+                await OpenFactsAPI.reloadConfig();
+                await updateLanguageDisplay();
+                showStatus('success', '✅ Configurazione ricaricata con successo');
+                showCacheInfo();
+            } catch (error) {
+                showStatus('error', `❌ Errore ricaricamento: ${error.message}`);
+            }
+        }
+
+        // Test automatico al caricamento
+        window.addEventListener('load', async () => {
+            showCacheInfo();
+            await updateLanguageDisplay();
+        });
+
+        async function updateLanguageDisplay() {
+            const currentLang = OpenFactsAPI.getLanguage();
+            const langSelect = document.getElementById('language-select');
+            const currentLangSpan = document.getElementById('current-language');
+
+            // Aggiorna il selettore
+            langSelect.value = currentLang;
+
+            // Mostra la lingua corrente
+            const supportedLangs = OpenFactsAPI.getSupportedLanguages();
+            currentLangSpan.textContent = `(Attuale: ${supportedLangs[currentLang] || currentLang})`;
+        }
+
+        async function changeLanguage() {
+            const langSelect = document.getElementById('language-select');
+            const selectedLang = langSelect.value;
+
+            if (OpenFactsAPI.setLanguage(selectedLang)) {
+                await updateLanguageDisplay();
+                showStatus('info', `🌍 Lingua cambiata a: ${OpenFactsAPI.getSupportedLanguages()[selectedLang]}`);
+            } else {
+                showStatus('error', `❌ Lingua non supportata: ${selectedLang}`);
+            }
+        }
+    </script>
+</body>
+</html>

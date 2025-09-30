@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+    <title>Test Barcode Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #scanner-container {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Barcode Scanner</h1>
+
+    <div class="test-section">
+        <h2>Test Supporto Fotocamera</h2>
+        <button onclick="testSupport()">Verifica Supporto</button>
+        <div id="support-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Scanner</h2>
+        <button onclick="startScanner()">Avvia Scanner</button>
+        <button onclick="stopScanner()">Ferma Scanner</button>
+        <div id="scanner-container"></div>
+        <div id="scanner-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Manuale</h2>
+        <input type="text" id="manual-code" placeholder="Inserisci codice a barre">
+        <button onclick="simulateDetection()">Simula Rilevamento</button>
+        <div id="manual-result"></div>
+    </div>
+
+    <script src="./pantryos/pantryos-addon/app/public/quagga.min.js"></script>
+    <script src="./pantryos/pantryos-addon/app/public/barcode-scanner.js"></script>
+
+    <script>
+        let isScanning = false;
+
+        function testSupport() {
+            const result = document.getElementById('support-result');
+            if (BarcodeScanner.isSupported()) {
+                result.innerHTML = '<div class="success">✅ Fotocamera supportata</div>';
+            } else {
+                result.innerHTML = '<div class="error">❌ Fotocamera non supportata</div>';
+            }
+        }
+
+        async function startScanner() {
+            const result = document.getElementById('scanner-result');
+            const container = document.getElementById('scanner-container');
+
+            try {
+                result.innerHTML = '<div>🔄 Inizializzazione scanner...</div>';
+                await BarcodeScanner.init('scanner-container');
+                await BarcodeScanner.start();
+                isScanning = true;
+                result.innerHTML = '<div class="success">✅ Scanner avviato</div>';
+
+                // Listener per barcode rilevati
+                document.addEventListener('barcodeDetected', (event) => {
+                    const code = event.detail.code;
+                    result.innerHTML = `<div class="success">✅ Codice rilevato: ${code}</div>`;
+                });
+
+            } catch (err) {
+                console.error('Errore scanner:', err);
+                let errorMsg = 'Errore sconosciuto';
+
+                if (err.name === 'NotAllowedError') {
+                    errorMsg = 'Permessi fotocamera negati. Assicurati di aver cliccato "Consenti" quando richiesto dal browser.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMsg = 'Nessuna fotocamera trovata.';
+                } else if (err.name === 'NotSupportedError') {
+                    errorMsg = 'Fotocamera non supportata.';
+                } else {
+                    errorMsg = err.message || 'Errore sconosciuto';
+                }
+
+                result.innerHTML = `<div class="error">❌ ${errorMsg}</div>`;
+            }
+        }
+
+        function stopScanner() {
+            if (isScanning) {
+                BarcodeScanner.stop();
+                isScanning = false;
+                document.getElementById('scanner-result').innerHTML = '<div>⏹️ Scanner fermato</div>';
+            }
+        }
+
+        function simulateDetection() {
+            const code = document.getElementById('manual-code').value;
+            if (code) {
+                BarcodeScanner.simulateDetection(code);
+                document.getElementById('manual-result').innerHTML = `<div class="success">✅ Codice simulato: ${code}</div>`;
+            } else {
+                document.getElementById('manual-result').innerHTML = '<div class="error">❌ Inserisci un codice</div>';
+            }
+        }
+
+        // Test automatico al caricamento
+        window.addEventListener('load', () => {
+            testSupport();
+        });
+    </script>
+</body>
+</html>
