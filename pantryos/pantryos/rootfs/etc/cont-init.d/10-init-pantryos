@@ -1,0 +1,26 @@
+#!/usr/bin/with-contenv bash
+set -euo pipefail
+
+echo "[init] Preparing persistent storage for PantryOS"
+
+PERSIST_DIR="/data/pantryos"
+SEED_SRC="/usr/share/pantryos/default-state.json"
+TARGET="${PERSIST_DIR}/state.json"
+
+mkdir -p "${PERSIST_DIR}"
+
+if [ ! -f "${TARGET}" ]; then
+  if [ -f "${SEED_SRC}" ]; then
+    echo "[init] Seeding demo dataset"
+    cp -f "${SEED_SRC}" "${TARGET}"
+  else
+    echo "[init][WARN] Seed file not found at ${SEED_SRC}. Skipping seeding."
+    # non usciamo con errore: niente crash
+  fi
+fi
+
+# Permessi conservativi
+chown -R root:root "${PERSIST_DIR}" || true
+chmod 600 "${TARGET}" || true
+
+echo "[init] Done."

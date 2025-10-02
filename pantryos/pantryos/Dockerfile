@@ -1,18 +1,22 @@
+# ============ Base immagine HA add-on ============
 ARG BUILD_FROM=ghcr.io/hassio-addons/base-nodejs:0.2.5
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# (opzionale) più tempo allo shutdown dei servizi
+ENV S6_SERVICES_GRACETIME=30000
 
-# Application directory
+# L'app vivrà qui
 WORKDIR /opt/pantryos
 
-# Copy Node.js application (server, public assets, data templates)
+# Copy script s6 e file di servizio
+COPY rootfs/ /
+
+# Copy codice/app (backend Node + frontend statico) nel container
 COPY app/ ./
 
-# Ensure root filesystem assets are available
-COPY rootfs /
+# Copy il dataset seed in un path read-only dell'immagine
+COPY app/data/default-state.json /usr/share/pantryos/default-state.json
 
 # Build arguments
 ARG BUILD_ARCH
