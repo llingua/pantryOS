@@ -180,6 +180,7 @@ function setSecurityHeaders(res) {
         `connect-src 'self'`,
         `img-src 'self' data:`,
         `font-src 'self'`,
+        `media-src 'self'`,
         `object-src 'none'`,
         `base-uri 'self'`,
         `frame-ancestors 'self'`,
@@ -190,7 +191,7 @@ function setSecurityHeaders(res) {
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self)');
 }
 
 function sendJson(res, status, payload) {
