@@ -16,7 +16,7 @@ COPY rootfs/ /
 COPY app/ ./
 
 # Copy il dataset seed in un path read-only dell'immagine
-COPY app/data/default-state.json /usr/share/pantryos/default-state.json
+COPY data/default-state.json /usr/share/pantryos/default-state.json
 
 # Build arguments
 ARG BUILD_ARCH
