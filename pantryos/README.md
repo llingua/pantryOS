@@ -153,10 +153,7 @@ SOFTWARE.
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg
 [commits-shield]: https://img.shields.io/github/commit-activity/y/llingua/pantryOS.svg
 [commits]: https://github.com/llingua/pantryOS/commits/main
-[discord]: https://discord.gg/c5DvZ4e
-[discord-ha]: https://discord.gg/home-assistant
 [forum]: https://community.home-assistant.io/?u=addon_pantryos
 [issue]: https://github.com/llingua/pantryOS/issues
 [reddit]: https://www.reddit.com/r/homeassistant
-[frenck]: https://github.com/frenck
 [contributors]: https://github.com/llingua/pantryOS/graphs/contributors

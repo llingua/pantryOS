@@ -147,7 +147,7 @@ nslookup github.com
 ### **Community Home Assistant**
 
 - [Forum HA](https://community.home-assistant.io/)
-- [Discord HA](https://discord.gg/c5DvZ4e)
+
 
 ### **Documentazione Ufficiale**
 
