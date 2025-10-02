@@ -12,11 +12,11 @@ WORKDIR /opt/pantryos
 # Copy script s6 e file di servizio
 COPY rootfs/ /
 
+# Copy il dataset seed in un path read-only dell'immagine (prima di copiare app/)
+COPY app/data/default-state.json /usr/share/pantryos/default-state.json
+
 # Copy codice/app (backend Node + frontend statico) nel container
 COPY app/ ./
-
-# Copy il dataset seed in un path read-only dell'immagine
-COPY data/default-state.json /usr/share/pantryos/default-state.json
 
 # Build arguments
 ARG BUILD_ARCH
