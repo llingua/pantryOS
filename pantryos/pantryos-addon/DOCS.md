@@ -7,7 +7,7 @@ attività domestiche.
 ## Installazione
 
 1. Apri **Impostazioni → Componenti aggiuntivi** in Home Assistant.
-2. Aggiungi il repository `https://github.com/llingua/addon-pantryos` nello Store.
+2. Aggiungi il repository `https://github.com/llingua/pantryOS` nello Store.
 3. Installa l'add-on **PantryOS (Node Edition)**.
 4. Avvia l'add-on e apri l'interfaccia tramite **OPEN WEB UI** (Ingress).
 
@@ -81,5 +81,5 @@ Tutte le richieste devono essere inviate con header `Content-Type: application/j
 ## Supporto
 
 Per assistenza, idee o bug report visita il
-[repository GitHub del progetto](https://github.com/llingua/addon-pantryos) o
+[repository GitHub del progetto](https://github.com/llingua/pantryOS) o
 partecipa ai canali community indicati nel README.
