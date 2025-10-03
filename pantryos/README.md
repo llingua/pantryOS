@@ -114,14 +114,14 @@ Per segnalazioni e proposte apri una issue nel repository GitHub ufficiale di Pa
 
 ## Autori e contributori
 
-PantryOS è un progetto indipendente creato da **Luca Lingua** (llingua001@gmail.com).
+PantryOS è un progetto indipendente creato da **Lorenzo Lingua** (llingua001@gmail.com).
 Contributi esterni sono benvenuti tramite pull request.
 
 ## Licenza
 
 MIT License
 
-Copyright (c) 2025 Luca Lingua
+Copyright (c) 2025 Lorenzo Lingua
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
