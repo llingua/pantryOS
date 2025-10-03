@@ -177,7 +177,7 @@ function setSecurityHeaders(res) {
         `default-src 'self'`,
         `script-src ${scriptSrc}`,
         `style-src ${styleSrc}`,
-        `connect-src 'self'`,
+        `connect-src 'self' https://world.openproductfacts.net`,
         `img-src 'self' data:`,
         `font-src 'self'`,
         `media-src 'self'`,
