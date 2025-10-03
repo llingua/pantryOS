@@ -171,7 +171,7 @@ function mutateState(mutator) {
 }
 
 function setSecurityHeaders(res) {
-    const scriptSrc = "'self' https://unpkg.com";
+    const scriptSrc = "'self' https://unpkg.com https://static.cloudflareinsights.com";
     const styleSrc = "'self' 'unsafe-inline'";
     res.setHeader('Content-Security-Policy', [
         `default-src 'self'`,
