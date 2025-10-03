@@ -181,6 +181,7 @@ function setSecurityHeaders(res) {
         `img-src 'self' data:`,
         `font-src 'self'`,
         `media-src 'self'`,
+        `worker-src 'self' blob:`,
         `object-src 'none'`,
         `base-uri 'self'`,
         `frame-ancestors 'self'`,
