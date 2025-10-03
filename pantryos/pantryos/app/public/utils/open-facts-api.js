@@ -3,9 +3,9 @@
   'use strict';
 
   const API_ENDPOINTS = {
-    openFoodFacts: 'https://world.openfoodfacts.net/api/v3/product',
-    openBeautyFacts: 'https://world.openbeautyfacts.net/api/v3/product',
-    openProductFacts: 'https://world.openproductfacts.net/api/v3/product'
+    openFoodFacts: 'https://world.openfoodfacts.org/api/v3/product',
+    openBeautyFacts: 'https://world.openbeautyfacts.org/api/v3/product',
+    openProductFacts: 'https://world.openproductfacts.org/api/v3/product'
   };
 
   // Lingue supportate dalle API Open Facts
