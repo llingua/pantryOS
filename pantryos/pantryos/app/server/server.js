@@ -130,7 +130,28 @@ async function ensureDataDirectory() {
 async function readStateFromDisk() {
     try {
         const raw = await fs.promises.readFile(DATA_FILE, 'utf-8');
-        return JSON.parse(raw);
+        const state = JSON.parse(raw);
+
+        // Verifica che lo stato abbia la struttura corretta
+        if (!state || typeof state !== 'object') {
+            throw new Error('Invalid state structure');
+        }
+
+        // Assicurati che tutte le proprietà necessarie esistano
+        const validState = {
+            items: state.items || [],
+            shoppingList: state.shoppingList || [],
+            tasks: state.tasks || [],
+            locations: state.locations || [],
+            productGroups: state.productGroups || [],
+            quantityUnits: state.quantityUnits || [],
+            shoppingLocations: state.shoppingLocations || [],
+            products: state.products || [],
+            barcodes: state.barcodes || [],
+            chores: state.chores || []
+        };
+
+        return validState;
     } catch (err) {
         if (err.code === 'ENOENT') {
             log('warning', 'State file missing, creating a new one with defaults');
@@ -138,8 +159,9 @@ async function readStateFromDisk() {
             return { ...defaultState };
         }
 
-        log('error', 'Unable to read state file', err);
-        throw err;
+        log('warning', 'State file corrupted or invalid, recreating with defaults', err.message);
+        await writeStateToDisk(defaultState);
+        return { ...defaultState };
     }
 }
 
@@ -323,8 +345,8 @@ async function handleApi(req, res, pathname) {
     if (pathname === '/api/state' && req.method === 'GET') {
         const state = await getState();
         const summary = {
-            items: state.items.length,
-            shoppingList: state.shoppingList.length
+            items: (state.items || []).length,
+            shoppingList: (state.shoppingList || []).length
         };
         sendJson(res, 200, { state, config: CONFIG, summary });
         return true;
