@@ -56,21 +56,6 @@
       }
     }, [appData.config?.culture]);
 
-    const currencyFormatter = useMemo(() => {
-      const locale = appData.config?.culture || 'it';
-      const currency = appData.config?.currency || 'EUR';
-      try {
-        return new Intl.NumberFormat(locale, { style: 'currency', currency });
-      } catch (error) {
-        console.warn('Unable to format currency', error);
-        return { format: (value) => `${value.toFixed(2)} ${currency}` };
-      }
-    }, [appData.config?.culture, appData.config?.currency]);
-
-    const inventoryValue = useMemo(() => {
-      if (!appData.state.items.length) return 0;
-      return appData.state.items.reduce((total, item) => total + Number(item.quantity || 0) * Number(item.price || 0), 0);
-    }, [appData.state.items]);
 
     const loadRefs = useCallback(async () => {
       const [locations, groups, units, shops] = await Promise.all([
@@ -176,7 +161,6 @@
           summary: [
             { label: 'Prodotti in dispensa', value: appData.summary.items },
             { label: 'Articoli in lista', value: appData.summary.shoppingList },
-            { label: 'Valore stimato', value: currencyFormatter.format(inventoryValue) },
           ],
         })
       ),

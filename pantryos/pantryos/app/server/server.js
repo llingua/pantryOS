@@ -172,14 +172,15 @@ function mutateState(mutator) {
 
 function setSecurityHeaders(res) {
     const scriptSrc = "'self' https://unpkg.com https://static.cloudflareinsights.com";
-    const styleSrc = "'self' 'unsafe-inline'";
+    const styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net";
+    const fontSrc = "'self' https://cdn.jsdelivr.net";
     res.setHeader('Content-Security-Policy', [
         `default-src 'self'`,
         `script-src ${scriptSrc}`,
         `style-src ${styleSrc}`,
         `connect-src 'self' https://world.openfoodfacts.org https://world.openbeautyfacts.org https://world.openproductfacts.org`,
         `img-src 'self' data:`,
-        `font-src 'self'`,
+        `font-src ${fontSrc}`,
         `media-src 'self'`,
         `worker-src 'self' blob:`,
         `object-src 'none'`,

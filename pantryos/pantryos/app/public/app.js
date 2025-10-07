@@ -95,14 +95,40 @@
   }
 
   function AppShell({ route, onRouteChange, title, message, error, children }) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const toggleMobileMenu = useCallback(() => {
+      setIsMobileMenuOpen(prev => !prev);
+    }, []);
+
+    const closeMobileMenu = useCallback(() => {
+      setIsMobileMenuOpen(false);
+    }, []);
+
     return h(
       'div',
       { className: 'app-shell' },
-      h(Sidebar, { route, onRouteChange }),
+      isMobileMenuOpen ? h('div', {
+        className: 'mobile-menu-overlay active',
+        onClick: closeMobileMenu
+      }) : null,
+      h(Sidebar, {
+        route,
+        onRouteChange,
+        isMobileOpen: isMobileMenuOpen,
+        onMobileClose: closeMobileMenu
+      }),
       h(
         'div',
         { className: 'app-main-area' },
-        h('header', { className: 'app-header' }, h('h1', null, title)),
+        h('header', { className: 'app-header' },
+          h('button', {
+            className: 'mobile-menu-toggle',
+            onClick: toggleMobileMenu,
+            'aria-label': 'Apri menu'
+          }, h('i', { className: 'ti ti-menu-2' })),
+          h('h1', null, title)
+        ),
         error ? h(StatusBanner, { type: 'error', message: error }) : null,
         message ? h(StatusBanner, { type: 'success', message }) : null,
         h('main', { className: 'app-main' }, children)

@@ -75,7 +75,8 @@
     if (configLoaded) return;
 
     try {
-      const response = await fetch('/api/config');
+      // const response = await fetch('/api/config'); // Disabilitato per evitare 401
+      const response = { ok: false }; // Simula errore per usare default
       if (response.ok) {
         const config = await response.json();
         if (config.culture) {

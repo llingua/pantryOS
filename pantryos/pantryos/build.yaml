@@ -4,5 +4,4 @@ build_from:
   amd64: ghcr.io/hassio-addons/base-nodejs:0.2.5
   armv7: ghcr.io/hassio-addons/base-nodejs:0.2.5
 codenotary:
-  base_image: codenotary@frenck.dev
-  signer: codenotary@frenck.dev
+  signer: lorenzo.lingua@gmail.com

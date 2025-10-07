@@ -9,22 +9,32 @@
   ];
 
   const ROUTES = [
-    { id: 'dashboard', label: 'Riepilogo della dispensa', group: 'overview', icon: '📊' },
-    { id: 'inventory', label: 'Inventario', group: 'overview', icon: '📦' },
-    { id: 'shopping', label: 'Lista della spesa', group: 'overview', icon: '🛒' },
-    { id: 'manage-products', label: 'Prodotti', group: 'manage', icon: '📦' },
-    { id: 'manage-locations', label: 'Posizioni', group: 'manage', icon: '📍' },
-    { id: 'manage-shops', label: 'Negozi', group: 'manage', icon: '🏬' },
-    { id: 'manage-units', label: 'Unità di misura', group: 'manage', icon: '⚖️' },
-    { id: 'manage-groups', label: 'Gruppi di prodotti', group: 'manage', icon: '🗂️' },
-    { id: 'settings', label: 'Impostazioni', group: 'system', icon: '⚙️' },
+    { id: 'dashboard', label: 'Riepilogo della dispensa', group: 'overview', icon: 'ti ti-chart-bar' },
+    { id: 'inventory', label: 'Inventario', group: 'overview', icon: 'ti ti-package' },
+    { id: 'shopping', label: 'Lista della spesa', group: 'overview', icon: 'ti ti-shopping-cart' },
+    { id: 'manage-products', label: 'Prodotti', group: 'manage', icon: 'ti ti-box' },
+    { id: 'manage-locations', label: 'Posizioni', group: 'manage', icon: 'ti ti-map-pin' },
+    { id: 'manage-shops', label: 'Negozi', group: 'manage', icon: 'ti ti-building-store' },
+    { id: 'manage-units', label: 'Unità di misura', group: 'manage', icon: 'ti ti-ruler-measure' },
+    { id: 'manage-groups', label: 'Gruppi di prodotti', group: 'manage', icon: 'ti ti-folders' },
+    { id: 'settings', label: 'Impostazioni', group: 'system', icon: 'ti ti-settings' },
   ];
 
-  function Sidebar({ route, onRouteChange }) {
+  function Sidebar({ route, onRouteChange, isMobileOpen, onMobileClose }) {
+    const handleRouteClick = (itemId) => {
+      onRouteChange(itemId);
+      if (onMobileClose) {
+        onMobileClose();
+      }
+    };
+
     return h(
       'aside',
-      { className: 'app-sidebar' },
-      h('div', { className: 'sidebar-logo' }, h('span', null, '🍱'), h('strong', null, 'PantryOS')),
+      { className: `app-sidebar${isMobileOpen ? ' mobile-open' : ''}` },
+      h('div', { className: 'sidebar-logo' },
+        h('i', { className: 'ti ti-basket sidebar-logo-icon' }),
+        h('strong', null, 'PantryOS')
+      ),
       NAV_GROUPS.map((group) =>
         h(
           'div',
@@ -42,9 +52,9 @@
                   {
                     type: 'button',
                     className: `sidebar-item${route === item.id ? ' active' : ''}`,
-                    onClick: () => onRouteChange(item.id),
+                    onClick: () => handleRouteClick(item.id),
                   },
-                  item.icon ? h('span', { className: 'sidebar-icon' }, item.icon) : null,
+                  item.icon ? h('i', { className: `sidebar-icon ${item.icon}` }) : null,
                   h('span', null, item.label)
                 )
               )
