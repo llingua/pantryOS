@@ -174,6 +174,52 @@
             ),
           }),
           h(FormField, {
+            label: 'Quantità in inventario',
+            children: h('div', { className: 'number-input-field' },
+              h('button', {
+                type: 'button',
+                className: 'number-input-btn number-input-decrease',
+                onClick: () => {
+                  const currentValue = parseFloat(form.stockQuantity) || 0;
+                  const newValue = Math.max(0, currentValue - 1);
+                  update('stockQuantity')({ target: { value: newValue.toString() } });
+                },
+                title: 'Decrementa',
+                'aria-label': 'Decrementa quantità'
+              }, h('i', { className: 'ti ti-minus' })),
+              h('input', {
+                type: 'number',
+                min: 0,
+                step: '0.01',
+                placeholder: '1',
+                value: form.stockQuantity || 1,
+                onChange: update('stockQuantity'),
+                className: 'number-input',
+              }),
+              h('button', {
+                type: 'button',
+                className: 'number-input-btn number-input-increase',
+                onClick: () => {
+                  const currentValue = parseFloat(form.stockQuantity) || 0;
+                  const newValue = currentValue + 1;
+                  update('stockQuantity')({ target: { value: newValue.toString() } });
+                },
+                title: 'Incrementa',
+                'aria-label': 'Incrementa quantità'
+              }, h('i', { className: 'ti ti-plus' }))
+            ),
+          }),
+          h(FormField, {
+            label: 'Posizione',
+            children: h('input', {
+              type: 'text',
+              placeholder: 'es. Frigorifero, Dispensa, Congelatore...',
+              value: form.location || '',
+              onChange: update('location'),
+              className: 'form-input',
+            }),
+          }),
+          h(FormField, {
             label: 'Data di scadenza',
             children: h('input', {
               type: 'date',

@@ -785,41 +785,115 @@ async function handleApi(req, res, pathname) {
         const body = await parseJsonBody(req);
         const name = (body.name || '').trim();
         if (!name) return sendError(res, 400, 'Il nome del prodotto è obbligatorio');
-        const product = await mutateState((state) => {
-            const p = {
-                id: crypto.randomUUID(),
-                name,
-                barcode: body.barcode ? String(body.barcode || '').trim() : null,
-                imageUrl: body.imageUrl ? String(body.imageUrl || '').trim() : null,
-                imageSmallUrl: body.imageSmallUrl ? String(body.imageSmallUrl || '').trim() : null,
-                brand: body.brand ? String(body.brand || '').trim() : null,
-                categories: body.categories ? String(body.categories || '').trim() : null,
-                ingredients: body.ingredients ? String(body.ingredients || '').trim() : null,
-                allergens: body.allergens ? String(body.allergens || '').trim() : null,
-                nutritionGrade: body.nutritionGrade ? String(body.nutritionGrade || '').trim() : null,
-                energy: body.energy ? String(body.energy || '').trim() : null,
-                energyUnit: body.energyUnit ? String(body.energyUnit || '').trim() : null,
-                quantity: body.quantity ? String(body.quantity || '').trim() : null,
-                countries: body.countries ? String(body.countries || '').trim() : null,
-                labels: body.labels ? String(body.labels || '').trim() : null,
-                packaging: body.packaging ? String(body.packaging || '').trim() : null,
-                ecoscore: body.ecoscore ? String(body.ecoscore || '').trim() : null,
-                novaGroup: body.novaGroup ? String(body.novaGroup || '').trim() : null,
-                openFactsUrl: body.openFactsUrl ? String(body.openFactsUrl || '').trim() : null,
-                openFactsSource: body.openFactsSource ? String(body.openFactsSource || '').trim() : null,
-                openFactsLanguage: body.openFactsLanguage ? String(body.openFactsLanguage || '').trim() : null,
-                description: (body.description || '').trim(),
-                productGroupId: body.productGroupId || null,
-                quantityUnitId: body.quantityUnitId || null,
-                shoppingLocationId: body.shoppingLocationId || null,
-                minStockAmount: sanitizeNumber(body.minStockAmount, 0),
-                createdAt: new Date().toISOString()
-            };
-            state.products = state.products || [];
-            state.products.push(p);
-            return p;
+
+        const result = await mutateState((state) => {
+            // Cerca se il prodotto esiste già (per nome)
+            let existingProduct = state.products?.find(p => p.name.toLowerCase() === name.toLowerCase());
+            let product;
+
+            if (existingProduct) {
+                // Aggiorna il prodotto esistente
+                product = { ...existingProduct };
+                if (body.barcode !== undefined) product.barcode = body.barcode ? String(body.barcode).trim() : null;
+                if (body.imageUrl !== undefined) product.imageUrl = body.imageUrl ? String(body.imageUrl).trim() : null;
+                if (body.imageSmallUrl !== undefined) product.imageSmallUrl = body.imageSmallUrl ? String(body.imageSmallUrl).trim() : null;
+                if (body.brand !== undefined) product.brand = body.brand ? String(body.brand).trim() : null;
+                if (body.categories !== undefined) product.categories = body.categories ? String(body.categories).trim() : null;
+                if (body.ingredients !== undefined) product.ingredients = body.ingredients ? String(body.ingredients).trim() : null;
+                if (body.allergens !== undefined) product.allergens = body.allergens ? String(body.allergens).trim() : null;
+                if (body.nutritionGrade !== undefined) product.nutritionGrade = body.nutritionGrade ? String(body.nutritionGrade).trim() : null;
+                if (body.energy !== undefined) product.energy = body.energy ? String(body.energy).trim() : null;
+                if (body.energyUnit !== undefined) product.energyUnit = body.energyUnit ? String(body.energyUnit).trim() : null;
+                if (body.quantity !== undefined) product.quantity = body.quantity ? String(body.quantity).trim() : null;
+                if (body.countries !== undefined) product.countries = body.countries ? String(body.countries).trim() : null;
+                if (body.labels !== undefined) product.labels = body.labels ? String(body.labels).trim() : null;
+                if (body.packaging !== undefined) product.packaging = body.packaging ? String(body.packaging).trim() : null;
+                if (body.ecoscore !== undefined) product.ecoscore = body.ecoscore ? String(body.ecoscore).trim() : null;
+                if (body.novaGroup !== undefined) product.novaGroup = body.novaGroup ? String(body.novaGroup).trim() : null;
+                if (body.openFactsUrl !== undefined) product.openFactsUrl = body.openFactsUrl ? String(body.openFactsUrl).trim() : null;
+                if (body.openFactsSource !== undefined) product.openFactsSource = body.openFactsSource ? String(body.openFactsSource).trim() : null;
+                if (body.openFactsLanguage !== undefined) product.openFactsLanguage = body.openFactsLanguage ? String(body.openFactsLanguage).trim() : null;
+                if (body.description !== undefined) product.description = (body.description || '').trim();
+                if (body.productGroupId !== undefined) product.productGroupId = body.productGroupId || null;
+                if (body.quantityUnitId !== undefined) product.quantityUnitId = body.quantityUnitId || null;
+                if (body.shoppingLocationId !== undefined) product.shoppingLocationId = body.shoppingLocationId || null;
+                if (body.minStockAmount !== undefined) product.minStockAmount = sanitizeNumber(body.minStockAmount, product.minStockAmount);
+
+                // Aggiorna il prodotto nell'array
+                const index = state.products.findIndex(p => p.id === existingProduct.id);
+                if (index !== -1) {
+                    state.products[index] = product;
+                }
+            } else {
+                // Crea un nuovo prodotto
+                product = {
+                    id: crypto.randomUUID(),
+                    name,
+                    barcode: body.barcode ? String(body.barcode || '').trim() : null,
+                    imageUrl: body.imageUrl ? String(body.imageUrl || '').trim() : null,
+                    imageSmallUrl: body.imageSmallUrl ? String(body.imageSmallUrl || '').trim() : null,
+                    brand: body.brand ? String(body.brand || '').trim() : null,
+                    categories: body.categories ? String(body.categories || '').trim() : null,
+                    ingredients: body.ingredients ? String(body.ingredients || '').trim() : null,
+                    allergens: body.allergens ? String(body.allergens || '').trim() : null,
+                    nutritionGrade: body.nutritionGrade ? String(body.nutritionGrade || '').trim() : null,
+                    energy: body.energy ? String(body.energy || '').trim() : null,
+                    energyUnit: body.energyUnit ? String(body.energyUnit || '').trim() : null,
+                    quantity: body.quantity ? String(body.quantity || '').trim() : null,
+                    countries: body.countries ? String(body.countries || '').trim() : null,
+                    labels: body.labels ? String(body.labels || '').trim() : null,
+                    packaging: body.packaging ? String(body.packaging || '').trim() : null,
+                    ecoscore: body.ecoscore ? String(body.ecoscore || '').trim() : null,
+                    novaGroup: body.novaGroup ? String(body.novaGroup || '').trim() : null,
+                    openFactsUrl: body.openFactsUrl ? String(body.openFactsUrl || '').trim() : null,
+                    openFactsSource: body.openFactsSource ? String(body.openFactsSource || '').trim() : null,
+                    openFactsLanguage: body.openFactsLanguage ? String(body.openFactsLanguage || '').trim() : null,
+                    description: (body.description || '').trim(),
+                    productGroupId: body.productGroupId || null,
+                    quantityUnitId: body.quantityUnitId || null,
+                    shoppingLocationId: body.shoppingLocationId || null,
+                    minStockAmount: sanitizeNumber(body.minStockAmount, 0),
+                    createdAt: new Date().toISOString()
+                };
+                state.products = state.products || [];
+                state.products.push(product);
+            }
+
+            // Gestisci l'inventario se specificata una quantità
+            const stockQuantity = sanitizeNumber(body.stockQuantity, 0);
+            if (stockQuantity > 0) {
+                const location = (body.location || '').trim();
+                const bestBefore = (body.bestBefore || '').trim();
+
+                // Cerca se esiste già un item nell'inventario per questo prodotto
+                const existingItem = state.items?.find(item =>
+                    item.name.toLowerCase() === name.toLowerCase() &&
+                    item.bestBefore === bestBefore
+                );
+
+                if (existingItem) {
+                    // Somma la quantità esistente
+                    existingItem.quantity += stockQuantity;
+                } else {
+                    // Crea un nuovo item nell'inventario
+                    const newItem = {
+                        id: crypto.randomUUID(),
+                        name,
+                        quantity: stockQuantity,
+                        location,
+                        bestBefore: bestBefore || null,
+                        createdAt: new Date().toISOString()
+                    };
+                    state.items = state.items || [];
+                    state.items.push(newItem);
+                }
+            }
+
+            return { product, addedToInventory: stockQuantity > 0 };
         });
-        sendJson(res, 201, product); return true;
+
+        sendJson(res, 201, result);
+        return true;
     }
     if (pathname.startsWith('/api/products/') && req.method === 'PATCH') {
         const id = pathname.split('/').pop();

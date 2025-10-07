@@ -20,6 +20,10 @@
       description: '',
       productGroupId: '',
       quantityUnitId: '',
+      // Nuovi campi per l'inventario
+      stockQuantity: 1,
+      location: '',
+      bestBefore: '',
       shoppingLocationId: '',
       minStockAmount: 0,
       quFactorPurchaseToStock: 1,
@@ -87,6 +91,10 @@
         energy: form.energy || null,
         energyUnit: form.energyUnit || null,
         quantity: form.quantity || null,
+        // Nuovi campi per l'inventario
+        stockQuantity: Number(form.stockQuantity) || 0,
+        location: form.location || '',
+        bestBefore: form.bestBefore || null,
         countries: form.countries || null,
         labels: form.labels || null,
         packaging: form.packaging || null,
@@ -106,6 +114,10 @@
           description: '',
           productGroupId: '',
           quantityUnitId: '',
+          // Nuovi campi per l'inventario
+          stockQuantity: 1,
+          location: '',
+          bestBefore: '',
           shoppingLocationId: '',
           minStockAmount: 0,
           quFactorPurchaseToStock: 1,
@@ -167,6 +179,10 @@
                   description: '',
                   productGroupId: '',
                   quantityUnitId: '',
+                  // Nuovi campi per l'inventario
+                  stockQuantity: 1,
+                  location: '',
+                  bestBefore: '',
                   shoppingLocationId: '',
                   minStockAmount: 0,
                   quFactorPurchaseToStock: 1,
@@ -181,26 +197,41 @@
         )
       ),
       h('section', { className: 'page-section' },
-        loading ? h('p', null, 'Caricamento prodotti...') : h('div', { className: 'entity-grid' },
-          products.map((product) => h('div', { key: product.id, className: 'card' },
-            h('h3', null, product.name),
-            product.description ? h('p', { className: 'muted' }, product.description) : null,
-            h('dl', { className: 'meta-list' },
-              product.productGroupId ? h(MetaRow, { label: 'Gruppo', value: (refs.groups.find((g) => g.id === product.productGroupId) || {}).name || '—' }) : null,
-              product.quantityUnitId ? h(MetaRow, { label: 'Unità', value: (refs.units.find((u) => u.id === product.quantityUnitId) || {}).name || '—' }) : null,
-              product.shoppingLocationId ? h(MetaRow, { label: 'Negozio', value: (refs.shops.find((s) => s.id === product.shoppingLocationId) || {}).name || '—' }) : null,
-              h(MetaRow, { label: 'Scorta minima', value: product.minStockAmount || 0 }),
-              h(MetaRow, {
-                label: 'Acquisto → Stock',
-                value: `${product.quFactorPurchaseToStock ?? 1} ${displayUnitLabel(refs.units, product.quFactorPurchaseToStockId)}`
-              }),
-              h(MetaRow, {
-                label: 'Stock → Consumo',
-                value: `${product.quFactorStockToConsume ?? 1} ${displayUnitLabel(refs.units, product.quFactorStockToConsumeId)}`
-              })
-            ),
-            h('div', { className: 'card-actions' },
-              h('button', { className: 'btn ghost', onClick: () => {
+        loading ? h('p', null, 'Caricamento prodotti...') : h('div', { className: 'product-card-grid' },
+          products.map((product) => {
+            const imageUrl = product.imageSmallUrl || product.imageUrl;
+            const groupName = (refs.groups.find((g) => g.id === product.productGroupId) || {}).name;
+            const unitName = (refs.units.find((u) => u.id === product.quantityUnitId) || {}).name;
+
+            return h('article', { key: product.id, className: 'product-card' },
+              h('div', { className: 'product-card-image' },
+                imageUrl
+                  ? h('img', { src: imageUrl, alt: product.name, loading: 'lazy' })
+                  : h('div', { className: 'product-card-placeholder' },
+                      h('i', { className: 'ti ti-package' })
+                    )
+              ),
+              h('div', { className: 'product-card-content' },
+                h('h3', { className: 'product-card-title' }, product.name),
+                product.description ? h('p', { className: 'product-card-description' }, product.description) : null,
+                h('div', { className: 'product-card-meta' },
+                  groupName ? h('span', { className: 'product-card-tag' },
+                    h('i', { className: 'ti ti-folder' }),
+                    ` ${groupName}`
+                  ) : null,
+                  unitName ? h('span', { className: 'product-card-tag' },
+                    h('i', { className: 'ti ti-ruler' }),
+                    ` ${unitName}`
+                  ) : null,
+                  product.minStockAmount > 0 ? h('span', { className: 'product-card-tag' },
+                    h('i', { className: 'ti ti-alert-circle' }),
+                    ` Min: ${product.minStockAmount}`
+                  ) : null
+                ),
+                h('div', { className: 'product-card-actions' },
+                  h('button', {
+                    className: 'btn-icon-text ghost',
+                    onClick: () => {
                 setEditing(product);
                 setForm({
                   name: product.name,
@@ -208,6 +239,10 @@
                   description: product.description || '',
                   productGroupId: product.productGroupId || '',
                   quantityUnitId: product.quantityUnitId || '',
+                  // Nuovi campi per l'inventario (non presenti nei prodotti esistenti)
+                  stockQuantity: 0,
+                  location: '',
+                  bestBefore: '',
                   shoppingLocationId: product.shoppingLocationId || '',
                   minStockAmount: product.minStockAmount ?? 0,
                   quFactorPurchaseToStock: product.quFactorPurchaseToStock ?? 1,
@@ -233,10 +268,23 @@
                   openFactsSource: product.openFactsSource || '',
                   openFactsLanguage: product.openFactsLanguage || '',
                 });
-              } }, 'Modifica'),
-              h('button', { className: 'btn danger', onClick: () => handleDelete(product) }, 'Elimina')
-            )
-          ))
+                    },
+                    title: 'Modifica prodotto'
+                  },
+                    h('i', { className: 'ti ti-edit' }),
+                    ' Modifica'
+                  ),
+                  h('button', {
+                    className: 'btn-icon danger',
+                    onClick: () => handleDelete(product),
+                    title: 'Elimina prodotto'
+                  },
+                    h('i', { className: 'ti ti-trash' })
+                  )
+                )
+              )
+            );
+          })
         )
       )
     );

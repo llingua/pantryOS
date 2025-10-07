@@ -17,19 +17,55 @@
 
     return h(
       'div',
-      { className: 'grid' },
+      { className: 'product-card-grid' },
       items.map((item) => {
         const isExpired = item.bestBefore && new Date(item.bestBefore) < new Date();
+        const imageUrl = item.imageSmallUrl || item.imageUrl;
+
         return h(
           'article',
-          { key: item.id, className: 'card' },
-          h('h3', null, item.name),
-          h('p', { className: 'muted' }, `${Number(item.quantity || 0)} pezzi${item.location ? ` • ${item.location}` : ''}`),
-          h('p', { className: 'muted' }, ['Scadenza: ', h('strong', null, item.bestBefore ? dateFormatter.format(new Date(item.bestBefore)) : '—')]),
-          isExpired ? h('span', { className: 'badge danger' }, 'Scaduto') : null,
-          h('div', { className: 'card-actions' },
-            h('button', { className: 'btn ghost', onClick: () => onConsume(item) }, 'Consuma 1'),
-            h('button', { className: 'btn danger', onClick: () => onDelete(item) }, 'Rimuovi')
+          { key: item.id, className: 'product-card' },
+          h('div', { className: 'product-card-image' },
+            imageUrl
+              ? h('img', { src: imageUrl, alt: item.name, loading: 'lazy' })
+              : h('div', { className: 'product-card-placeholder' },
+                  h('i', { className: 'ti ti-package' })
+                )
+          ),
+          h('div', { className: 'product-card-content' },
+            h('h3', { className: 'product-card-title' }, item.name),
+            h('div', { className: 'product-card-meta' },
+              h('span', { className: 'product-card-quantity' },
+                h('i', { className: 'ti ti-box' }),
+                ` ${Number(item.quantity || 0)}`
+              ),
+              item.location ? h('span', { className: 'product-card-location' },
+                h('i', { className: 'ti ti-map-pin' }),
+                ` ${item.location}`
+              ) : null,
+              item.bestBefore ? h('span', {
+                className: `product-card-expiry${isExpired ? ' expired' : ''}`
+              },
+                h('i', { className: 'ti ti-calendar' }),
+                ` Scad: ${dateFormatter.format(new Date(item.bestBefore))}`
+              ) : null
+            )
+          ),
+          h('div', { className: 'product-card-actions' },
+            h('button', {
+              className: 'btn-icon-text ghost',
+              onClick: () => onConsume(item),
+              title: 'Consuma 1'
+            },
+              h('i', { className: 'ti ti-minus' })
+            ),
+            h('button', {
+              className: 'btn-icon danger',
+              onClick: () => onDelete(item),
+              title: 'Elimina'
+            },
+              h('i', { className: 'ti ti-trash' })
+            )
           )
         );
       })

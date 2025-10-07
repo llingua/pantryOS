@@ -14,13 +14,36 @@
       }
     }, [appData.config?.culture]);
 
+    // Arricchisci gli item dell'inventario con le informazioni dei prodotti (immagini, ecc.)
+    const enrichedItems = useMemo(() => {
+      const items = appData.state.items || [];
+      const products = appData.state.products || [];
+
+      return items.map(item => {
+        // Cerca il prodotto corrispondente per nome
+        const product = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+
+        // Arricchisci l'item con le info del prodotto se trovato
+        if (product) {
+          return {
+            ...item,
+            imageUrl: item.imageUrl || product.imageUrl,
+            imageSmallUrl: item.imageSmallUrl || product.imageSmallUrl,
+            productId: product.id
+          };
+        }
+
+        return item;
+      });
+    }, [appData.state.items, appData.state.products]);
+
     return h(
       'div',
       { className: 'page' },
       h('section', { className: 'page-section' },
         h('h2', null, 'Inventario completo'),
         h(InventoryGrid, {
-          items: appData.state.items,
+          items: enrichedItems,
           dateFormatter,
           onConsume: (item) => notify(() => api.updateItem(item.id, { quantity: Math.max(0, Number(item.quantity || 0) - 1) }), 'Quantità aggiornata'),
           onDelete: (item) => notify(() => api.deleteItem(item.id), 'Prodotto rimosso'),
