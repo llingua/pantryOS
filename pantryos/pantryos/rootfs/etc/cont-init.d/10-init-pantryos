@@ -7,20 +7,47 @@ PERSIST_DIR="/data/pantryos"
 SEED_SRC="/usr/share/pantryos/default-state.json"
 TARGET="${PERSIST_DIR}/state.json"
 
+# Crea la directory con permessi corretti
 mkdir -p "${PERSIST_DIR}"
+chown -R root:root "${PERSIST_DIR}"
+chmod 755 "${PERSIST_DIR}"
 
 if [ ! -f "${TARGET}" ]; then
   if [ -f "${SEED_SRC}" ]; then
-    echo "[init] Seeding demo dataset"
+    echo "[init] Seeding demo dataset from ${SEED_SRC}"
     cp -f "${SEED_SRC}" "${TARGET}"
+    chmod 644 "${TARGET}"
+    echo "[init] State file created at ${TARGET}"
   else
-    echo "[init][WARN] Seed file not found at ${SEED_SRC}. Skipping seeding."
-    # non usciamo con errore: niente crash
+    echo "[init][WARN] Seed file not found at ${SEED_SRC}. Creating empty state."
+    # Crea un file di stato vuoto invece di lasciare che il server lo crei
+    cat > "${TARGET}" << 'EOF'
+{
+  "items": [],
+  "shoppingList": [],
+  "tasks": [],
+  "locations": [],
+  "productGroups": [],
+  "quantityUnits": [],
+  "shoppingLocations": [],
+  "products": [],
+  "barcodes": [],
+  "chores": []
+}
+EOF
+    chmod 644 "${TARGET}"
+    echo "[init] Empty state file created at ${TARGET}"
   fi
+else
+  echo "[init] State file already exists at ${TARGET}"
 fi
 
-# Permessi conservativi
-chown -R root:root "${PERSIST_DIR}" || true
-chmod 600 "${TARGET}" || true
+# Verifica che il file esista
+if [ -f "${TARGET}" ]; then
+  echo "[init] State file ready: $(ls -la ${TARGET})"
+else
+  echo "[init][ERROR] State file creation failed!"
+  exit 1
+fi
 
 echo "[init] Done."

@@ -6,6 +6,9 @@ FROM ${BUILD_FROM}
 # (opzionale) più tempo allo shutdown dei servizi
 ENV S6_SERVICES_GRACETIME=30000
 
+# Imposta il percorso del file di stato per l'addon HA
+ENV APP_DATA_FILE=/data/pantryos/state.json
+
 # L'app vivrà qui
 WORKDIR /opt/pantryos
 
