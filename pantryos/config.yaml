@@ -56,13 +56,7 @@ schema:
   log_level:
     name: Log Level
     description: Livello di log
-    type: select
-    options:
-      - debug
-      - info
-      - warning
-      - error
-      - critical
+    type: string
     default: info
     required: true
     advanced: true
@@ -76,7 +70,7 @@ schema:
 
   culture:
     name: Lingua
-    description: Lingua dell'interfaccia
+    description: Lingua dell'interfaccia (it, en, es, fr, de)
     type: string
     default: it
     required: true
