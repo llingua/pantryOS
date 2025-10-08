@@ -31,10 +31,10 @@ ENV \
     PUID=1000 \
     PGID=1000
 
-# Crea utente e gruppo non-root
+# Crea utente e gruppo non-root (idempotente: non fallire se esistono già)
 RUN \
-    addgroup -g ${PGID} pantryos && \
-    adduser -D -u ${PUID} -G pantryos -h /data -D pantryos && \
+    (grep -q '^pantryos:' /etc/group || addgroup -g ${PGID} pantryos || addgroup pantryos) && \
+    (id -u pantryos >/dev/null 2>&1 || adduser -D -u ${PUID} -G pantryos -h /data pantryos || adduser -D -G pantryos -h /data pantryos) && \
     mkdir -p /data/pantryos && \
     chown -R pantryos:pantryos /data/pantryos
 
