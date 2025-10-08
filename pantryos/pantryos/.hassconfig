@@ -1,0 +1,10 @@
+{
+  "name": "PantryOS",
+  "version": "dev-10",
+  "slug": "pantryos",
+  "description": "Gestione della dispensa con interfaccia React",
+  "url": "https://github.com/llingua/pantryos",
+  "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
+  "startup": "application",
+  "boot": "auto"
+}

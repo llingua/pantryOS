@@ -6,6 +6,54 @@
 
 **🔁 REFRESHED ARCHITECTURE** – PantryOS è stato progettato interamente con **Node.js** e **React**.
 
+## 🚀 Build e Rilascio
+
+### Prerequisiti
+- Git
+- Node.js 18+
+- Docker (per build multi-architettura)
+
+### Build dell'Add-on
+
+1. Clona il repository:
+   ```bash
+   git clone https://github.com/llingua/pantryos.git
+   cd pantryos
+   ```
+
+2. Rendi eseguibile lo script di build:
+   ```bash
+   chmod +x build-addon.sh
+   ```
+
+3. Esegui lo script di build:
+   ```bash
+   ./build-addon.sh
+   ```
+   
+   Questo genererà un file `.tar.gz` nella cartella `dist/`.
+
+### Creazione di una Nuova Release
+
+1. Aggiorna la versione in `pantryos/config.yaml`
+2. Esegui lo script di build
+3. Crea un nuovo tag Git:
+   ```bash
+   git tag -a v1.0.0 -m 'Release 1.0.0'
+   git push origin v1.0.0
+   ```
+4. Crea una nuova release su GitHub e carica i file:
+   - `dist/pantryos-{VERSION}.tar.gz`
+   - `dist/pantryos-{VERSION}.tar.gz.sha256`
+   - `dist/pantryos-{VERSION}.tar.gz.asc` (se firmato)
+
+### Aggiunta della Repository a Home Assistant
+
+1. Vai su **Impostazioni** > **Componenti aggiuntivi**
+2. Clicca su **Repository** (in basso a destra)
+3. Aggiungi: `https://github.com/llingua/pantryos`
+4. Installa "PantryOS" dalla lista degli add-on disponibili
+
 ## About
 
 PantryOS è una piattaforma autonoma per la gestione della dispensa:

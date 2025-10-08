@@ -1,0 +1,13 @@
+# Ignore common files
+**/.git
+**/.github
+**/node_modules
+**/test
+**/tests
+**/__tests__
+**/coverage
+**/*.log
+**/*.md
+**/*.yaml
+!pantryos/config.yaml
+!pantryos/build.yaml
