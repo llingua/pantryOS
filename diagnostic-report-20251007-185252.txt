@@ -1,0 +1,17 @@
+PantryOS - Report Diagnostico
+============================
+Data: Mar  7 Ott 2025 18:52:52 CEST
+Sistema: Darwin IT_XHV2MDY1JD 24.6.0 Darwin Kernel Version 24.6.0: Mon Aug 11 21:16:21 PDT 2025; root:xnu-11417.140.69.701.11~1/RELEASE_ARM64_T6000 arm64
+
+Docker Info:
+Docker non disponibile
+
+Variabili d'ambiente:
+
+File di configurazione:
+- config.yaml: -rw-r--r--@ 1 llingua001  staff  357  7 Ott 18:43 ./pantryos/pantryos/config.yaml
+- Dockerfile: -rwxr-xr-x@ 1 llingua001  staff  1714  7 Ott 18:39 ./pantryos/pantryos/Dockerfile
+- docker-compose.yml: -rw-r--r--@ 1 llingua001  staff  1312 29 Set 18:06 ./docker-compose.yml
+
+Container in esecuzione:
+Nessun container

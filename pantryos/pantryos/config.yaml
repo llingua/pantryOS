@@ -1,6 +1,6 @@
 ---
 name: PantryOS
-version: dev-9.1
+version: dev-10
 slug: pantryos
 description: Gestione della dispensa con interfaccia React e backend Node.js
 url: https://github.com/llingua/pantryOS
@@ -16,5 +16,170 @@ ingress_port: 8099
 panel_icon: mdi:food-apple
 map:
   - data:rw
-options: {}
-schema: {}
+  - ssl:ro
+  - share:rw
+  - media:rw
+
+# Configurazione predefinita
+options:
+  # Impostazioni di base
+  log_level: info
+  timezone: Europe/Rome
+  culture: it
+  currency: EUR
+
+  # Impostazioni di sicurezza
+  auth_proxy: true
+  auth_proxy_header: X-WebAuth-User
+  trusted_proxies: []
+
+  # Impostazioni di rete
+  host: 0.0.0.0
+  port: 3000
+  base_path: /
+
+  # Impostazioni database
+  database_path: /data/pantryos
+  backup_enabled: true
+  backup_retention_days: 30
+
+  # Impostazioni notifiche
+  notifications_enabled: true
+  email_notifications: false
+  push_notifications: true
+
+# Schema di validazione per le opzioni
+schema:
+  # Impostazioni di base
+  log_level:
+    name: Log Level
+    description: Livello di log
+    required: true
+    type: select
+    options:
+      - debug
+      - info
+      - warning
+      - error
+      - critical
+    default: info
+    advanced: true
+
+  timezone:
+    name: Timezone
+    description: Fuso orario del sistema
+    required: true
+    type: string
+    default: Europe/Rome
+
+  culture:
+    name: Lingua
+    description: Lingua dell'interfaccia
+    required: true
+    type: select
+    options:
+      - it
+      - en
+      - es
+      - fr
+      - de
+    default: it
+
+  currency:
+    name: Valuta
+    description: Valuta predefinita
+    required: true
+    type: string
+    default: EUR
+
+  # Impostazioni di sicurezza
+  auth_proxy:
+    name: Abilita Auth Proxy
+    description: Abilita l'autenticazione tramite proxy inverso
+    required: true
+    type: boolean
+    default: true
+
+  auth_proxy_header:
+    name: Header Auth Proxy
+    description: Header HTTP per l'autenticazione tramite proxy
+    required: true
+    type: string
+    default: X-WebAuth-User
+
+  trusted_proxies:
+    name: Proxy attendibili
+    description: Lista di indirizzi IP o reti attendibili per il proxy
+    required: false
+    type: [string]
+    default: []
+
+  # Impostazioni di rete
+  host:
+    name: Host
+    description: Indirizzo di ascolto
+    required: true
+    type: string
+    default: 0.0.0.0
+
+  port:
+    name: Porta
+    description: Porta di ascolto
+    required: true
+    type: integer
+    value_min: 1
+    value_max: 65535
+    default: 3000
+
+  base_path:
+    name: Percorso base
+    description: Percorso base dell'applicazione
+    required: true
+    type: string
+    default: /
+
+  # Impostazioni database
+  database_path:
+    name: Percorso database
+    description: Directory di salvataggio del database
+    required: true
+    type: string
+    default: /data/pantryos
+
+  backup_enabled:
+    name: Backup automatici
+    description: Abilita i backup automatici
+    required: true
+    type: boolean
+    default: true
+
+  backup_retention_days:
+    name: Conservazione backup (giorni)
+    description: Numero di giorni di conservazione dei backup
+    required: true
+    type: integer
+    value_min: 1
+    value_max: 365
+    default: 30
+
+  # Impostazioni notifiche
+  notifications_enabled:
+    name: Abilita notifiche
+    description: Abilita le notifiche dell'applicazione
+    required: true
+    type: boolean
+    default: true
+
+  email_notifications:
+    name: Notifiche email
+    description: Abilita le notifiche via email
+    required: true
+    type: boolean
+    default: false
+
+  push_notifications:
+    name: Notifiche push
+    description: Abilita le notifiche push
+    required: true
+    type: boolean
+    default: true

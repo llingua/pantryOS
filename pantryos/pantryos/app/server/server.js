@@ -5,21 +5,43 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 const crypto = require('crypto');
+const compression = require('compression');
 
-const DATA_FILE = process.env.APP_DATA_FILE || path.join(__dirname, '../data/state.json');
-const PUBLIC_DIR = process.env.APP_PUBLIC_DIR || path.join(__dirname, '../public');
+// Load environment variables from .env file if it exists
+require('dotenv').config();
+
+// Initialize logger
+const logger = require('./utils/logger');
+
+// Load middleware
+const { errorHandler, notFoundHandler, asyncHandler } = require('./middleware/errorHandler');
+const { applySecurity } = require('./middleware/security');
+const { applyPerformance } = require('./middleware/performance');
+const { applySwagger } = require('./middleware/swagger');
+
+// Configuration
+const DATA_FILE = process.env.APP_DATA_FILE || path.join(process.cwd(), 'data', 'state.json');
+const PUBLIC_DIR = process.env.APP_PUBLIC_DIR || path.join(__dirname, '../../public');
 const HOST = process.env.APP_HOST || '0.0.0.0';
-const PORT = Number.parseInt(process.env.APP_PORT || '8080', 10);
+const PORT = Number.parseInt(process.env.APP_PORT || '3000', 10);
 const BASE_PATH_RAW = process.env.APP_BASE_PATH || '/';
 const BASE_PATH = BASE_PATH_RAW === '/' ? '' : BASE_PATH_RAW.replace(/\/$/, '');
-const LOG_LEVEL = (process.env.APP_LOG_LEVEL || 'info').toLowerCase();
-const CONFIG_FILE = process.env.APP_CONFIG_FILE || path.join(__dirname, '../data/config.json');
+const CONFIG_FILE = process.env.APP_CONFIG_FILE || path.join(process.cwd(), 'data', 'config.json');
 
 let CONFIG = {
-    culture: process.env.APP_CULTURE || 'en',
-    currency: process.env.APP_CURRENCY || 'USD',
-    timezone: process.env.APP_TIMEZONE || 'UTC',
-    logLevel: LOG_LEVEL
+    culture: process.env.APP_CULTURE || 'it',
+    currency: process.env.APP_CURRENCY || 'EUR',
+    timezone: process.env.APP_TIMEZONE || 'Europe/Rome',
+    logLevel: process.env.LOG_LEVEL || 'info'
+};
+
+// Ensure data directory exists
+const ensureDataDirectory = () => {
+    const dataDir = path.dirname(DATA_FILE);
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+        logger.info(`Created data directory: ${dataDir}`);
+    }
 };
 
 const EXTENSION_CONTENT_TYPES = new Map([
@@ -45,7 +67,7 @@ const LOG_LEVEL_ORDER = new Map([
     ['error', 5],
     ['fatal', 6],
 ]);
-// Config load/save
+// Load configuration from file
 async function loadConfig() {
     const defaults = {
         culture: process.env.APP_CULTURE || 'en',
@@ -380,10 +402,30 @@ async function handleApi(req, res, pathname) {
 
             sendJson(res, 201, newItem);
             return true;
-        } catch (err) {
-            log('error', 'Failed to add inventory item', err);
-            sendError(res, 400, 'Impossibile elaborare il prodotto inviato', err.message);
-            return true;
+        } catch (error) {
+            log('error', 'Unhandled error', { 
+                error: error.message, 
+                stack: error.stack,
+                url: req.url,
+                method: req.method,
+                headers: req.headers
+            });
+            
+            // More detailed error responses
+            const statusCode = error.statusCode || 500;
+            const errorResponse = {
+                status: 'error',
+                message: error.message || 'Internal Server Error',
+                code: error.code,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Don't expose stack traces in production
+            if (process.env.NODE_ENV !== 'production') {
+                errorResponse.stack = error.stack;
+            }
+            
+            sendJson(res, statusCode, errorResponse);
         }
     }
 
@@ -1002,42 +1044,185 @@ function resolveStaticPath(requestPath) {
     return path.join(PUBLIC_DIR, resolved);
 }
 
+// Health check endpoint
+const healthCheck = () => ({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    database: {
+        path: DATA_FILE,
+        writable: !!(fs.existsSync(DATA_FILE) 
+            ? fs.accessSync(DATA_FILE, fs.constants.W_OK) 
+            : fs.accessSync(path.dirname(DATA_FILE), fs.constants.W_OK))
+    },
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || 'dev'
+});
+
+// Initialize the HTTP server
 const server = http.createServer(async (req, res) => {
-    setSecurityHeaders(res);
-
-    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
-    let pathname = parsedUrl.pathname;
-    if (BASE_PATH && pathname.startsWith(BASE_PATH)) {
-        pathname = pathname.slice(BASE_PATH.length) || '/';
-    }
-
-    log('debug', 'Incoming request', { method: req.method, pathname });
-
-    if (pathname.startsWith('/api/')) {
-        const handled = await handleApi(req, res, pathname);
-        if (!handled) {
-            res.statusCode = 404;
-            sendJson(res, 404, { error: 'Endpoint non trovato' });
+    try {
+        // Parse URL
+        const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+        let pathname = parsedUrl.pathname;
+        
+        // Handle base path
+        if (BASE_PATH && pathname.startsWith(BASE_PATH)) {
+            pathname = pathname.slice(BASE_PATH.length) || '/';
         }
-        return;
-    }
+        
+        // Add request logging
+        logger.info('Incoming request', {
+            method: req.method,
+            path: pathname,
+            query: Object.fromEntries(parsedUrl.searchParams),
+            ip: req.socket.remoteAddress,
+            userAgent: req.headers['user-agent']
+        });
+        
+        // Health check endpoint
+        server.use(`${BASE_PATH}/api/health`, (req, res) => {
+            res.json(healthCheck());
+        });
+        
+        // Import and use API routes
+        const itemsRouter = require('./routes/items');
+        server.use(`${BASE_PATH}/api/items`, itemsRouter);
 
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-        res.statusCode = 405;
-        res.end('Method Not Allowed');
-        return;
-    }
+        // API routes
+        if (pathname.startsWith('/api/')) {
+            const handled = await handleApi(req, res, pathname);
+            if (!handled) {
+                return notFoundHandler(req, res);
+            }
+            return;
+        }
 
-    const filePath = resolveStaticPath(pathname);
-    await serveStaticFile(req, res, filePath);
+        // Serve static files for all other GET/HEAD requests
+        if (req.method === 'GET' || req.method === 'HEAD') {
+            const filePath = resolveStaticPath(pathname);
+            return await serveStaticFile(req, res, filePath);
+        }
+        
+        // Method not allowed for other HTTP methods on static files
+        res.setHeader('Allow', 'GET, HEAD');
+        return sendJson(res, 405, { 
+            status: 'error',
+            message: 'Method Not Allowed',
+            allowed: ['GET', 'HEAD']
+        });
+        
+    } catch (error) {
+        // Pass the error to the error handler
+        errorHandler(error, req, res, () => {});
+    }
 });
 
-server.listen(PORT, HOST, () => {
-    log('info', `PantryOS refactored server listening on http://${HOST}:${PORT}${BASE_PATH || ''}`);
-});
+// Start the server
+const startServer = async () => {
+    try {
+        // Ensure data directory exists
+        ensureDataDirectory();
+        
+        // Load configuration
+        await loadConfig();
+        
+        // Apply security middleware
+        applySecurity(server);
+        
+        // Apply performance optimizations
+        applyPerformance(server);
+        
+        // Apply Swagger documentation
+        if (process.env.NODE_ENV !== 'production') {
+          applySwagger(server);
+        }
+        
+        // Start listening
+        server.listen(PORT, HOST, () => {
+            logger.info(`Server is running on http://${HOST}:${PORT}${BASE_PATH || ''}`, {
+                environment: process.env.NODE_ENV || 'development',
+                nodeVersion: process.version,
+                platform: process.platform,
+                pid: process.pid
+            });
+            
+            // Log important configuration
+            logger.debug('Server configuration', {
+                dataFile: DATA_FILE,
+                publicDir: PUBLIC_DIR,
+                basePath: BASE_PATH || '/',
+                config: {
+                    culture: CONFIG.culture,
+                    currency: CONFIG.currency,
+                    timezone: CONFIG.timezone,
+                    logLevel: CONFIG.logLevel
+                }
+            });
+        });
+        
+        // Handle server errors
+        server.on('error', (error) => {
+            logger.error('Server error', {
+                error: error.message,
+                stack: error.stack,
+                code: error.code
+            });
+            
+            // Attempt graceful shutdown
+            if (error.code === 'EADDRINUSE') {
+                logger.error(`Port ${PORT} is already in use`);
+                process.exit(1);
+            }
+        });
+        
+        // Handle process termination
+        process.on('SIGTERM', () => {
+            logger.info('SIGTERM received. Shutting down gracefully...');
+            server.close(() => {
+                logger.info('Server stopped');
+                process.exit(0);
+            });
+            
+            // Force shutdown after timeout
+            setTimeout(() => {
+                logger.error('Forcing shutdown after timeout');
+                process.exit(1);
+            }, 10000);
+        });
+        
+        // Handle uncaught exceptions
+        process.on('uncaughtException', (error) => {
+            logger.error('Uncaught exception', {
+                error: error.message,
+                stack: error.stack
+            });
+            // Don't exit immediately, give time for logging
+            setTimeout(() => process.exit(1), 100);
+        });
+        
+        // Handle unhandled promise rejections
+        process.on('unhandledRejection', (reason, promise) => {
+            logger.error('Unhandled rejection at:', promise, 'reason:', reason);
+        });
+        
+    } catch (error) {
+        logger.error('Failed to start server', {
+            error: error.message,
+            stack: error.stack
+        });
+        process.exit(1);
+    }
+};
+
+// Start the server
+if (require.main === module) {
+    startServer();
+}
 
 server.on('clientError', (err, socket) => {
-    log('warning', 'Client connection error', err.message);
+    logger.warning('Client connection error', err.message);
     if (socket.writable) {
         socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     }

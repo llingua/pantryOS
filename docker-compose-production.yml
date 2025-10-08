@@ -1,0 +1,108 @@
+version: '3.8'
+
+# Docker Compose per simulare perfettamente l'ambiente Home Assistant
+# Questo file replica le condizioni esatte di produzione HA
+
+services:
+  # PantryOS come addon HA
+  pantryos-local:
+    build:
+      context: ./pantryos/pantryos
+      dockerfile: Dockerfile
+    container_name: pantryos-production-sim
+    ports:
+      # Porta esterna per accesso diretto (come in HA)
+      - '8080:8099'
+    environment:
+      # Variabili d'ambiente identiche a HA
+      - NODE_ENV=production
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8099
+      - APP_DATA_FILE=/data/pantryos/state.json
+      - APP_PUBLIC_DIR=/opt/pantryos/public
+      - APP_BASE_PATH=/
+      - APP_CULTURE=it
+      - APP_CURRENCY=EUR
+      - APP_TIMEZONE=Europe/Rome
+      - APP_LOG_LEVEL=info
+      # Variabili specifiche HA
+      - SUPERVISOR_TOKEN=test-token
+      - SUPERVISOR_URL=http://supervisor:4357
+      - HASSIO_TOKEN=test-hassio-token
+    volumes:
+      # Mount identico a HA
+      - ./data:/data
+      # Log directory
+      - ./logs:/var/log
+    networks:
+      - ha-network
+    restart: unless-stopped
+    labels:
+      - 'homeassistant.io/addon=pantryos'
+      - 'homeassistant.io/version=dev-9.1'
+      - 'homeassistant.io/arch=aarch64'
+    # Simula le limitazioni di risorse HA
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    # Health check come in HA
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8099/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Home Assistant Core per test completo
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ha-core-production-sim
+    volumes:
+      - ./ha-config:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - '8123:8123'
+    networks:
+      - ha-network
+    environment:
+      - TZ=Europe/Rome
+      - PUID=1000
+      - PGID=1000
+    restart: unless-stopped
+    # Simula le limitazioni HA
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+
+  # Supervisor simulato (opzionale per test avanzati)
+  supervisor:
+    image: ghcr.io/home-assistant/supervisor:stable
+    container_name: ha-supervisor-sim
+    volumes:
+      - ./ha-config:/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ha-network
+    environment:
+      - SUPERVISOR_SHARE=/config
+      - SUPERVISOR_NAME=homeassistant
+    restart: unless-stopped
+    privileged: true
+
+networks:
+  ha-network:
+    driver: bridge
+    # Simula la rete HA
+    ipam:
+      config:
+        - subnet: 172.16.0.0/12
+
+volumes:
+  pantryos-data:
+    driver: local
+  ha-config:
+    driver: local

@@ -3,49 +3,135 @@
 [![GitHub Release][releases-shield]][releases]
 ![Project Stage][project-stage-shield]
 [![License][license-shield]](LICENSE.md)
+[![Node.js Version][node-version-shield]][node-version]
+[![Dependencies Status][dependencies-shield]][dependencies-url]
 
-**🔁 REFRESHED ARCHITECTURE** – PantryOS è stato progettato interamente con **Node.js** e **React**.
+**🚀 MODERN ARCHITECTURE** – PantryOS è un'applicazione web moderna per la gestione della dispensa, costruita con **Node.js** e **React**.
 
-## About
+## 📋 Panoramica
 
-PantryOS è una piattaforma autonoma per la gestione della dispensa:
+PantryOS è una piattaforma completa per la gestione della dispensa domestica, con le seguenti caratteristiche:
 
-- 🌐 **Frontend React** con grafica responsive e componenti moderni
-- 🟢 **Backend Node.js** con API leggere basate su file JSON persistenti
-- 🧊 **Storage persistente** in `/data/pantryos/state.json`, con possibilità di
-  inizializzare dati demo o ambiente vuoto
-- 🛡️ **Security headers** e protezioni contro richieste malformate già incluse
+- 🌐 **Frontend React** con interfaccia utente reattiva e moderna
+- 🟢 **Backend Node.js** ad alte prestazioni con API RESTful
+- 📊 **Logging avanzato** con rotazione dei file e diversi livelli di log
+- 🔒 **Sicurezza rafforzata** con rate limiting, CORS e protezioni varie
+- 🧩 **Architettura modulare** per una facile manutenzione ed estensione
 
-Perfetto per monitorare dispensa, lista della spesa e attività domestiche in
-maniera semplice e visuale.
+## ✨ Funzionalità principali
 
-## ✨ Novità principali
+- ✅ Gestione completa della dispensa con categorie personalizzabili
+- 🛒 Lista della spesa integrata
+- 📊 Statistiche e report sui consumi
+- 🌍 Supporto multilingua e multi-valuta
+- ⚡ Ottimizzato per le prestazioni con compressione e caching
+- 🛡️ Sicurezza avanzata con validazione degli input e protezione da attacchi comuni
 
-- Interfaccia React single-page ottimizzata per Ingress
-- API RESTful leggere in Node.js, senza dipendenze esterne
-- Gestione di scorte, lista della spesa e attività in un unico dashboard
-- Supporto alle impostazioni di cultura, valuta e timezone
-- Dataset dimostrativo opzionale per partire subito
+## 🚀 Installazione rapida
 
-## 🔐 Sicurezza integrata
+1. Clona il repository:
+   ```bash
+   git clone https://github.com/llingua/pantryOS.git
+   cd pantryOS
+   ```
 
-- Content Security Policy restrittiva con caricamento script da fonti note
-- Header di sicurezza (HSTS, X-Frame-Options, Referrer-Policy, ecc.)
-- Sanitizzazione delle richieste e limite dimensione payload
-- Storage JSON con permessi restrittivi
+2. Copia il file di configurazione di esempio:
+   ```bash
+   cp .env.example .env
+   ```
 
-# 🚀 Installazione
+3. Installa le dipendenze:
+   ```bash
+   npm install
+   ```
 
-1. Clona il repository `https://github.com/llingua/pantryOS`
-2. Installa le dipendenze Node.js (se previste)
-3. Usa gli script di gestione per avviare il server
-4. Accedi a `http://localhost:8080`
+4. Avvia il server in modalità sviluppo:
+   ```bash
+   npm run dev
+   ```
 
-## 📋 Script di gestione
+5. Apri il browser all'indirizzo: [http://localhost:3000](http://localhost:3000)
 
-Il progetto include script di gestione per facilitare l'uso:
+## 🛠️ Configurazione
 
-### 🚀 Avvio
+Tutte le impostazioni possono essere configurate tramite variabili d'ambiente. Copia il file `.env.example` in `.env` e modifica le impostazioni secondo necessità.
+
+### Variabili d'ambiente principali
+
+- `NODE_ENV`: Ambiente di esecuzione (`development`, `production`)
+- `APP_PORT`: Porta su cui gira il server (default: `3000`)
+- `APP_HOST`: Indirizzo di ascolto (default: `0.0.0.0`)
+- `APP_DATA_FILE`: Percorso del file di dati (default: `./data/state.json`)
+- `APP_CULTURE`: Lingua predefinita (default: `it`)
+- `APP_CURRENCY`: Valuta predefinita (default: `EUR`)
+- `APP_TIMEZONE`: Fuso orario (default: `Europe/Rome`)
+- `LOG_LEVEL`: Livello di log (`error`, `warn`, `info`, `debug`)
+
+## 🚀 Script disponibili
+
+- `npm start`: Avvia il server in produzione
+- `npm run dev`: Avvia il server in modalità sviluppo con hot-reload
+- `npm test`: Esegue i test (da implementare)
+- `npm run lint`: Esegue il linter sul codice
+- `npm run format`: Formatta automaticamente il codice
+
+## 🔒 Sicurezza
+
+PantryOS include diverse funzionalità di sicurezza integrate:
+
+- **Rate Limiting**: Protezione contro attacchi di forza bruta
+- **CORS**: Controllo degli accessi cross-origin
+- **Security Headers**: Headers di sicurezza HTTP
+- **Validazione input**: Sanificazione di tutti gli input utente
+- **Logging**: Tracciamento dettagliato delle attività
+
+## 📚 Documentazione
+
+La documentazione completa è disponibile nella cartella `/docs`.
+
+## 🤝 Contributi
+
+I contributi sono ben accetti! Per favore leggi le linee guida per i contributi prima di inviare una pull request.
+
+## 📄 Licenza
+
+Questo progetto è rilasciato sotto la licenza MIT. Vedi il file [LICENSE](LICENSE) per i dettagli.
+
+## 👨‍💻 Sviluppo
+
+### Struttura del progetto
+
+```
+pantryOS/
+├── pantryos/                 # Cartella principale dell'addon
+│   ├── app/                  # Codice sorgente
+│   │   ├── public/           # File statici
+│   │   └── server/           # Codice del server Node.js
+│   │       ├── middleware/   # Middleware personalizzati
+│   │       └── utils/        # Utilità e helper
+│   └── config.yaml           # Configurazione dell'addon
+├── .env.example             # File di esempio per le variabili d'ambiente
+└── package.json             # Dipendenze e script
+```
+
+### Convenzioni di codice
+
+- Usa `async/await` invece di promise con `.then()`
+- Segui lo stile di codice definito in `.eslintrc`
+- Documenta le funzioni con JSDoc
+- Scrivi test per le nuove funzionalità
+
+## 📞 Supporto
+
+Per problemi o domande, apri una issue su GitHub.
+
+---
+
+Sviluppato con ❤️ da [llingua](https://github.com/llingua)
+
+## 🚀 Script di avvio
+
+### Avvio
 
 ```bash
 ./start.sh              # Avvio semplice (default)
@@ -54,29 +140,25 @@ Il progetto include script di gestione per facilitare l'uso:
 ./start.sh help         # Mostra aiuto
 ```
 
-### 🛑 Arresto
+### Arresto
 
 ```bash
 ./stop.sh               # Ferma il server PantryOS
 ```
 
-### 🔄 Riavvio
+### Riavvio
 
 ```bash
 ./restart.sh            # Riavvia in modalità semplice (default)
 ./restart.sh simple     # Riavvia in modalità semplice
 ./restart.sh complete   # Riavvia in modalità completa
-./restart.sh help       # Mostra aiuto
 ```
 
-### 🎯 Modalità disponibili
+## 🔧 Configurazione avanzata
 
-- **Semplice**: Server standalone con funzionalità base
-- **Completa**: Tutte le funzionalità API (locations, products, shopping list, tasks, etc.)
+### Configurazione tramite file
 
-## 🔧 Configurazione
-
-Esempio di configurazione:
+Puoi configurare PantryOS modificando il file `pantryos/config.yaml`:
 
 ```yaml
 culture: it
@@ -86,38 +168,19 @@ demo_data: true
 log_level: info
 ```
 
-- `culture`: lingua dell'interfaccia e formattazione date
-- `currency`: valuta utilizzata per i totali stimati
-- `timezone`: timezone utilizzata per date ed orari (opzionale)
-- `demo_data`: inizializza l'istanza con dati dimostrativi
-- `log_level`: livello di log del backend Node.js (`info` di default)
+### Opzioni di configurazione
 
-Ricordati di riavviare l'add-on dopo ogni modifica.
+- `culture`: Lingua dell'interfaccia (es. `it`, `en`, `es`, `fr`)
+- `currency`: Valuta predefinita (es. `EUR`, `USD`, `GBP`)
+- `timezone`: Fuso orario (es. `Europe/Rome`, `America/New_York`)
+- `demo_data`: Se `true`, carica dati dimostrativi all'avvio
+- `log_level`: Livello di log (`error`, `warn`, `info`, `debug`)
 
-## 🗂️ Struttura del progetto
+## 🗂️ Struttura dei dati
 
-```
-pantryos/
-├── app/
-│   ├── public/        # Frontend React distribuito come asset statico
-│   ├── server/        # Backend Node.js con API e static serving
-│   └── data/          # Dataset demo e stato vuoto
-└── rootfs/
-    └── etc/s6-overlay # Script di avvio e preparazione storage
-```
+I dati dell'applicazione vengono salvati in formato JSON nel file specificato dalla variabile d'ambiente `APP_DATA_FILE` (default: `./data/state.json`).
 
-I dati persistenti vengono salvati in `/data/pantryos/state.json`.
-
-## Supporto
-
-Per segnalazioni e proposte apri una issue nel repository GitHub ufficiale di PantryOS.
-
-## Autori e contributori
-
-PantryOS è un progetto indipendente creato da **Lorenzo Lingua** (lorenzo.lingua@gmail.com).
-Contributi esterni sono benvenuti tramite pull request.
-
-## Licenza
+## 📄 Licenza
 
 MIT License
 

@@ -1,0 +1,54 @@
+{
+  "name": "pantryos",
+  "version": "1.0.0",
+  "description": "PantryOS - Gestione della dispensa per Home Assistant",
+  "main": "pantryos/pantryos/app/server/server.js",
+  "scripts": {
+    "start": "node pantryos/pantryos/app/server/server.js",
+    "dev": "NODE_ENV=development APP_PORT=3000 APP_DATA_FILE=./data/state.json node pantryos/pantryos/app/server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
+    "docs:generate": "node -e \"require('./pantrios/pantryos/app/server/middleware/swagger').generateSwaggerDocs()\"",
+    "docs:serve": "NODE_ENV=development APP_PORT=3000 swagger-ui-watcher ./docs/openapi.json -p 3001"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.3.1",
+    "etag": "^1.8.1",
+    "express-rate-limit": "^6.7.0",
+    "fresh": "^0.5.2",
+    "helmet": "^7.1.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.47.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-node": "^11.1.0",
+    "prettier": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "home-assistant",
+    "pantry",
+    "inventory",
+    "home-automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/llingua/pantryOS"
+  },
+  "bugs": {
+    "url": "https://github.com/llingua/pantryOS/issues"
+  }
+}
