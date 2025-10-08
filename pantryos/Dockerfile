@@ -11,7 +11,8 @@ RUN npm ci --only=production
 COPY app/ ./
 
 # ============ Runtime Stage ============
-ARG BUILD_FROM
+# Default value that will be overridden by build arguments
+ARG BUILD_FROM=ghcr.io/hassio-addons/base-nodejs/amd64:0.2.5
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
