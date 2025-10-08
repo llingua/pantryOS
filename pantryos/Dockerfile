@@ -10,7 +10,12 @@ WORKDIR /build
 
 # Installa le dipendenze di build
 COPY app/package*.json ./
-RUN npm ci --only=production
+# Usa npm ci se esiste il lockfile, altrimenti fallback a npm install senza dev deps
+RUN if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then \
+      npm ci --omit=dev; \
+    else \
+      npm install --omit=dev; \
+    fi
 
 # Copia il codice sorgente
 COPY app/ ./

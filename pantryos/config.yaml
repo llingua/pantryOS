@@ -1,6 +1,6 @@
 ---
 name: PantryOS
-version: "dev-18"
+version: "dev-19"
 description: Gestione della dispensa con interfaccia React
 url: https://github.com/llingua/pantryos
 slug: pantryos
