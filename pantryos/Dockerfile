@@ -11,7 +11,7 @@ RUN npm ci --only=production
 COPY app/ ./
 
 # ============ Runtime Stage ============
-ARG BUILD_FROM=ghcr.io/hassio-addons/base-nodejs:0.2.5
+ARG BUILD_FROM
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
