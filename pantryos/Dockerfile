@@ -1,16 +1,13 @@
-ARG BUILD_FROM
+# syntax=docker/dockerfile:1
 
-# Ensure first stage uses the HA base image so the Supervisor-injected BUILD_FROM is applied
-FROM ${BUILD_FROM} AS base
-
-# ============ Build Stage ============
+# ============ Build stage (opzionale: se hai un'app Node in /app) ============
 FROM node:18-alpine AS builder
-
 WORKDIR /build
 
-# Copia il codice sorgente (intero)
+# Copia i sorgenti dell'app (se la cartella esiste)
 COPY app/ ./
-# Installa le dipendenze solo se presente package.json
+
+# Installa solo dipendenze runtime se c'è package.json
 RUN if [ -f package.json ]; then \
       if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then \
         npm ci --omit=dev; \
@@ -20,57 +17,43 @@ RUN if [ -f package.json ]; then \
     else \
       echo "No package.json found, skipping npm install"; \
     fi
+# Se hai uno step di build (frontend), sblocca:
+# RUN npm run build || true
 
-# ============ Runtime Stage ============
-# hadolint ignore=DL3006
-FROM ${BUILD_FROM}
+# ============ Runtime stage (base Home Assistant) ============
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
-# Imposta le variabili d'ambiente
-ENV \
-    # Più tempo allo shutdown dei servizi
-    S6_SERVICES_GRACETIME=30000 \
-    # Percorso del file di stato
+# Variabili d'ambiente utili
+ENV S6_SERVICES_GRACETIME=30000 \
     APP_DATA_FILE=/data/pantryos/state.json \
-    # Imposta NODE_ENV a production per prestazioni ottimali
     NODE_ENV=production \
-    # Imposta utente non-root
     PUID=1000 \
     PGID=1000
 
-# Crea utente e gruppo non-root (idempotente: non fallire se esistono già)
-RUN \
-    (grep -q '^pantryos:' /etc/group || addgroup -g ${PGID} pantryos || addgroup pantryos) && \
-    (id -u pantryos >/dev/null 2>&1 || adduser -D -u ${PUID} -G pantryos -h /data pantryos || adduser -D -G pantryos -h /data pantryos) && \
-    mkdir -p /data/pantryos && \
-    chown -R pantryos:pantryos /data/pantryos
+# Crea utente/gruppo non-root e directory dati (idempotente)
+RUN (grep -q '^pantryos:' /etc/group || addgroup -g ${PGID} pantryos || addgroup pantryos) \
+ && (id -u pantryos >/dev/null 2>&1 || adduser -D -u ${PUID} -G pantryos -h /data pantryos || adduser -D -G pantryos -h /data pantryos) \
+ && mkdir -p /data/pantryos /usr/share/pantryos /opt/pantryos
 
-# Crea le directory necessarie
-RUN mkdir -p /usr/share/pantryos && \
-    chown -R pantryos:pantryos /usr/share/pantryos
-
-# Imposta la directory di lavoro
 WORKDIR /opt/pantryos
 
-# Copia gli script s6 e i file di servizio
-COPY --chown=pantryos:pantryos rootfs/ /
+# Copia s6, script di servizio e asset statici di sistema
+# (Metti qui anche: rootfs/usr/share/pantryos/default-state.json)
+COPY rootfs/ /
 
-# Copia il dataset seed in un path read-only (dallo stage di build)
-COPY --from=builder --chown=pantryos:pantryos /build/data/default-state.json /usr/share/pantryos/default-state.json
+# Assicura i permessi corretti
+RUN chown -R pantryos:pantryos /data/pantryos /usr/share/pantryos /opt/pantryos \
+ && [ -d /etc/services.d/pantryos ] && chmod -R 755 /etc/services.d/pantryos || true \
+ && [ -d /etc/cont-init.d ] && chmod -R 755 /etc/cont-init.d || true
 
-# Copia i file compilati dallo stage di build
+# (Opzionale) Copia artefatti dallo stage builder
+# - Se hai un "dist", preferisci solo quello:
+# COPY --from=builder --chown=pantryos:pantryos /build/dist /opt/pantryos/app
+# - Altrimenti copia tutto /build (come stavi facendo):
 COPY --from=builder --chown=pantryos:pantryos /build /opt/pantryos
 
-# Imposta i permessi corretti
-RUN chmod -R 755 /etc/services.d/pantryos && \
-    chmod -R 755 /etc/cont-init.d
-
-# Switch all'utente non-root
-USER pantryos
-
-# Esponi la porta (se necessario)
-# EXPOSE 3000
-
-# Etichette Docker
+# Etichette (il Supervisor le inietta come build args)
 ARG BUILD_ARCH
 ARG BUILD_DATE
 ARG BUILD_DESCRIPTION
@@ -79,24 +62,29 @@ ARG BUILD_REF
 ARG BUILD_REPOSITORY
 ARG BUILD_VERSION
 
-LABEL \
-    io.hass.name="${BUILD_NAME}" \
-    io.hass.description="${BUILD_DESCRIPTION}" \
-    io.hass.arch="${BUILD_ARCH}" \
-    io.hass.type="addon" \
-    io.hass.version=${BUILD_VERSION} \
-    maintainer="PantryOS Project" \
-    org.opencontainers.image.title="${BUILD_NAME}" \
-    org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
-    org.opencontainers.image.vendor="PantryOS" \
-    org.opencontainers.image.authors="PantryOS Team" \
-    org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.url="https://pantryos.app" \
-    org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
-    org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \
-    org.opencontainers.image.created=${BUILD_DATE} \
-    org.opencontainers.image.revision=${BUILD_REF} \
-    org.opencontainers.image.version=${BUILD_VERSION}
+LABEL io.hass.name="${BUILD_NAME}" \
+      io.hass.description="${BUILD_DESCRIPTION}" \
+      io.hass.arch="${BUILD_ARCH}" \
+      io.hass.type="addon" \
+      io.hass.version=${BUILD_VERSION} \
+      maintainer="PantryOS Project" \
+      org.opencontainers.image.title="${BUILD_NAME}" \
+      org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
+      org.opencontainers.image.vendor="PantryOS" \
+      org.opencontainers.image.authors="PantryOS Team" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.url="https://pantryos.app" \
+      org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
+      org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \
+      org.opencontainers.image.created=${BUILD_DATE} \
+      org.opencontainers.image.revision=${BUILD_REF} \
+      org.opencontainers.image.version=${BUILD_VERSION}
+
+# Healthcheck (usa wget; fallback a curl se presente)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget -q --spider http://127.0.0.1:3000/health || curl -fsS http://127.0.0.1:3000/health || exit 1
+
+# Nessun CMD: lo start è gestito da s6 (script in /etc/services.d/pantryos/run)
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
