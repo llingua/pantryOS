@@ -1,0 +1,12 @@
+# Ignore backup folders and build artifacts so Supervisor doesn't parse them as add-ons
+pantryos_backup_*/
+pantryos_backup_20251008_193218/
+dist/
+logs/
+*.tar.gz
+*.sha256
+*.asc
+
+# Common clutter
+.DS_Store
+node_modules/
