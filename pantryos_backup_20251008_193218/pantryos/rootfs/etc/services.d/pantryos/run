@@ -1,0 +1,13 @@
+#!/usr/bin/with-contenv bash
+set -euo pipefail
+
+cd /opt/pantryos/server
+
+# Porta interna esposta per Ingress
+export APP_PORT=8099
+
+# Dove leggere/scrivere lo stato persistente
+export PANTRYOS_DATA_DIR="/data/pantryos"
+
+echo "[run] Starting PantryOS on port ${APP_PORT}"
+exec node server.js
