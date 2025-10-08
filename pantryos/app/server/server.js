@@ -36,13 +36,15 @@ let CONFIG = {
 };
 
 // Ensure data directory exists
-const ensureDataDirectory = () => {
-    const dataDir = path.dirname(DATA_FILE);
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-        logger.info(`Created data directory: ${dataDir}`);
+async function ensureDataDirectory() {
+    try {
+        await fs.promises.mkdir(path.dirname(DATA_FILE), { recursive: true });
+        logger.info(`Created data directory: ${path.dirname(DATA_FILE)}`);
+    } catch (err) {
+        log('error', 'Failed to create data directory', err);
+        throw err;
     }
-};
+}
 
 const EXTENSION_CONTENT_TYPES = new Map([
     ['.html', 'text/html; charset=utf-8'],
@@ -140,14 +142,6 @@ function log(level, message, metadata) {
     }
 }
 
-async function ensureDataDirectory() {
-    try {
-        await fs.promises.mkdir(path.dirname(DATA_FILE), { recursive: true });
-    } catch (err) {
-        log('error', 'Failed to create data directory', err);
-        throw err;
-    }
-}
 
 async function readStateFromDisk() {
     try {
