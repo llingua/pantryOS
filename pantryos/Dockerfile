@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+# Deve essere PRIMA di qualsiasi FROM, così è visibile nella FROM runtime
+ARG BUILD_FROM
+
 # ============ Build stage (opzionale: se hai un'app Node in /app) ============
 FROM node:18-alpine AS builder
 WORKDIR /build
@@ -21,7 +24,6 @@ RUN if [ -f package.json ]; then \
 # RUN npm run build || true
 
 # ============ Runtime stage (base Home Assistant) ============
-ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Variabili d'ambiente utili
