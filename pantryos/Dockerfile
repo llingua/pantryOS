@@ -1,3 +1,8 @@
+ARG BUILD_FROM
+
+# Ensure first stage uses the HA base image so the Supervisor-injected BUILD_FROM is applied
+FROM ${BUILD_FROM} AS base
+
 # ============ Build Stage ============
 FROM node:18-alpine AS builder
 
@@ -11,8 +16,6 @@ RUN npm ci --only=production
 COPY app/ ./
 
 # ============ Runtime Stage ============
-# Default value that will be overridden by build arguments
-ARG BUILD_FROM=ghcr.io/hassio-addons/base-nodejs/amd64:0.2.5
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
