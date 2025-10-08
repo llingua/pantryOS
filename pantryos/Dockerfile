@@ -8,17 +8,18 @@ FROM node:18-alpine AS builder
 
 WORKDIR /build
 
-# Installa le dipendenze di build
-COPY app/package*.json ./
-# Usa npm ci se esiste il lockfile, altrimenti fallback a npm install senza dev deps
-RUN if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then \
-      npm ci --omit=dev; \
-    else \
-      npm install --omit=dev; \
-    fi
-
-# Copia il codice sorgente
+# Copia il codice sorgente (intero)
 COPY app/ ./
+# Installa le dipendenze solo se presente package.json
+RUN if [ -f package.json ]; then \
+      if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then \
+        npm ci --omit=dev; \
+      else \
+        npm install --omit=dev; \
+      fi; \
+    else \
+      echo "No package.json found, skipping npm install"; \
+    fi
 
 # ============ Runtime Stage ============
 # hadolint ignore=DL3006
