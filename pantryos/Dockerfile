@@ -48,8 +48,8 @@ WORKDIR /opt/pantryos
 # Copia gli script s6 e i file di servizio
 COPY --chown=pantryos:pantryos rootfs/ /
 
-# Copia il dataset seed in un path read-only
-COPY --chown=pantryos:pantryos app/data/default-state.json /usr/share/pantryos/default-state.json
+# Copia il dataset seed in un path read-only (dallo stage di build)
+COPY --from=builder --chown=pantryos:pantryos /build/data/default-state.json /usr/share/pantryos/default-state.json
 
 # Copia i file compilati dallo stage di build
 COPY --from=builder --chown=pantryos:pantryos /build /opt/pantryos
