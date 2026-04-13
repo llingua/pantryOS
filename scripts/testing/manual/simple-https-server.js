@@ -2,6 +2,10 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+const ROOT_DIR = path.resolve(__dirname, '../../..');
+const MANUAL_DIR = __dirname;
+const APP_PUBLIC_DIR = path.join(ROOT_DIR, 'pantryos/app/public');
+
 // Funzione per leggere il body delle richieste
 function getRequestBody(req) {
   return new Promise((resolve, reject) => {
@@ -18,8 +22,8 @@ function getRequestBody(req) {
 
 // Carica i certificati SSL
 const options = {
-  key: fs.readFileSync('./localhost+2-key.pem'),
-  cert: fs.readFileSync('./localhost+2.pem')
+  key: fs.readFileSync(path.join(ROOT_DIR, 'localhost+2-key.pem')),
+  cert: fs.readFileSync(path.join(ROOT_DIR, 'localhost+2.pem'))
 };
 
 // Server HTTPS semplice
@@ -40,10 +44,9 @@ const server = https.createServer(options, async (req, res) => {
   let filePath;
 
   // Gestione API endpoints
-  if (req.url.startsWith('/api/') || req.url.startsWith('/pantryos/pantryos-addon/app/public/api/')) {
+  if (req.url.startsWith('/api/')) {
     // Reindirizza le chiamate API al server PantryOS
-    const apiUrl = req.url.replace('/pantryos/pantryos-addon/app/public', '');
-    const targetUrl = `http://localhost:8080${apiUrl}`;
+    const targetUrl = `http://localhost:8080${req.url}`;
 
     console.log(`🔄 Proxy API: ${req.url} -> ${targetUrl}`);
 
@@ -97,17 +100,17 @@ const server = https.createServer(options, async (req, res) => {
   }
 
   if (req.url === '/' || req.url === '/index.html') {
-    filePath = './test-barcode.html';
+    filePath = path.join(MANUAL_DIR, 'test-barcode.html');
   } else if (req.url === '/test-open-facts' || req.url === '/test-open-facts.html') {
-    filePath = './test-open-facts.html';
+    filePath = path.join(MANUAL_DIR, 'test-open-facts.html');
   } else if (req.url === '/test-api-v3' || req.url === '/test-api-v3.html') {
-    filePath = './test-api-v3.html';
-  } else if (req.url === '/pantryos/pantryos-addon/app/public/' || req.url === '/pantryos/pantryos-addon/app/public') {
-    filePath = './pantryos/pantryos-addon/app/public/index.html';
-  } else if (req.url.startsWith('/pantryos/')) {
-    filePath = '.' + req.url;
+    filePath = path.join(MANUAL_DIR, 'test-api-v3.html');
+  } else if (req.url === '/app/' || req.url === '/app') {
+    filePath = path.join(APP_PUBLIC_DIR, 'index.html');
+  } else if (req.url.startsWith('/app/')) {
+    filePath = path.join(APP_PUBLIC_DIR, req.url.replace(/^\/app\//, ''));
   } else {
-    filePath = './pantryos/pantryos-addon/app/public' + req.url;
+    filePath = path.join(MANUAL_DIR, req.url.replace(/^\//, ''));
   }
 
   // MIME types
@@ -150,7 +153,7 @@ server.listen(PORT, () => {
   console.log(`📱 Test barcode scanner: https://localhost:${PORT}/`);
   console.log(`🧪 Test Open Facts API: https://localhost:${PORT}/test-open-facts`);
   console.log(`🔬 Test Open Facts API v3: https://localhost:${PORT}/test-api-v3`);
-  console.log(`🏠 App PantryOS: https://localhost:${PORT}/pantryos/pantryos-addon/app/public/`);
+  console.log(`🏠 App PantryOS: https://localhost:${PORT}/app/`);
   console.log('\n⚠️  Il browser potrebbe mostrare un avviso di sicurezza.');
   console.log('   Clicca "Avanzate" → "Procedi verso localhost (non sicuro)"');
   console.log('\n📋 Istruzioni:');

@@ -1,0 +1,14 @@
+{
+  "name": "pantryos-app",
+  "version": "1.0.1",
+  "private": true,
+  "description": "PantryOS Home Assistant addon application",
+  "main": "server/pantryos-server.js",
+  "scripts": {
+    "start": "node server/pantryos-server.js",
+    "dev": "NODE_ENV=development APP_HOST=127.0.0.1 APP_PORT=3000 APP_DATA_FILE=../../data/pantryos/state.json APP_CONFIG_FILE=../../data/pantryos/config.json APP_SCHEMA_FILE=./data/schema.json APP_PUBLIC_DIR=./public APP_BASE_PATH=/ node server/pantryos-server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

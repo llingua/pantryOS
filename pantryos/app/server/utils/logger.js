@@ -4,7 +4,21 @@ const fs = require('fs');
 const path = require('path');
 const { createGzip } = require('zlib');
 const { Transform } = require('stream');
-const { format } = require('date-fns');
+
+function formatTimestampForFilename(date) {
+    const parts = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+    ];
+    const time = [
+        String(date.getHours()).padStart(2, '0'),
+        String(date.getMinutes()).padStart(2, '0'),
+        String(date.getSeconds()).padStart(2, '0'),
+    ];
+
+    return `${parts.join('')}_${time.join('')}`;
+}
 
 class Logger {
     constructor(options = {}) {
@@ -69,7 +83,7 @@ class Logger {
             }
 
             // Compress the current log file
-            const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
+            const timestamp = formatTimestampForFilename(new Date());
             const compressedFile = `${this.currentLogFile}.${timestamp}.gz`;
             
             const readStream = fs.createReadStream(this.currentLogFile);

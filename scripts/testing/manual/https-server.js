@@ -2,10 +2,14 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+const ROOT_DIR = path.resolve(__dirname, '../../..');
+const MANUAL_DIR = __dirname;
+const APP_PUBLIC_DIR = path.join(ROOT_DIR, 'pantryos/app/public');
+
 // Carica i certificati SSL
 const options = {
-  key: fs.readFileSync('./localhost+2-key.pem'),
-  cert: fs.readFileSync('./localhost+2.pem')
+  key: fs.readFileSync(path.join(ROOT_DIR, 'localhost+2-key.pem')),
+  cert: fs.readFileSync(path.join(ROOT_DIR, 'localhost+2.pem'))
 };
 
 // MIME types
@@ -23,15 +27,13 @@ const mimeTypes = {
 
 // Server HTTPS
 const server = https.createServer(options, (req, res) => {
-  let filePath = '.' + req.url;
-  if (filePath === './') {
-    filePath = './pantryos/pantryos-addon/app/public/index.html';
-  } else if (filePath.startsWith('./pantryos/')) {
-    // Mantieni il path originale per i file dell'app
-    filePath = filePath;
+  let filePath = path.join(MANUAL_DIR, req.url === '/' ? 'test-barcode.html' : req.url.replace(/^\//, ''));
+  if (req.url === '/') {
+    filePath = path.join(MANUAL_DIR, 'test-barcode.html');
+  } else if (req.url.startsWith('/app/')) {
+    filePath = path.join(APP_PUBLIC_DIR, req.url.replace(/^\/app\//, ''));
   } else {
-    // Per altri file, cerca nella directory public
-    filePath = './pantryos/pantryos-addon/app/public' + req.url;
+    filePath = path.join(MANUAL_DIR, req.url.replace(/^\//, ''));
   }
 
   const extname = String(path.extname(filePath)).toLowerCase();
@@ -61,7 +63,7 @@ const PORT = 8443;
 server.listen(PORT, () => {
   console.log(`🚀 Server HTTPS avviato su https://localhost:${PORT}`);
   console.log(`📱 Test barcode scanner: https://localhost:${PORT}/test-barcode.html`);
-  console.log(`🏠 App PantryOS: https://localhost:${PORT}/`);
+  console.log(`🏠 App PantryOS: https://localhost:${PORT}/app/index.html`);
   console.log('\n⚠️  Il browser potrebbe mostrare un avviso di sicurezza.');
   console.log('   Clicca "Avanzate" → "Procedi verso localhost (non sicuro)"');
 });

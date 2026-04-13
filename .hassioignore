@@ -3,6 +3,10 @@ pantryos_backup_*/
 pantryos_backup_20251008_193218/
 dist/
 logs/
+archive/
+docs/
+scripts/
+*.pem
 *.tar.gz
 *.sha256
 *.asc

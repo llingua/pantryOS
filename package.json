@@ -1,15 +1,19 @@
 {
   "name": "pantryos",
-  "version": "1.0.0",
-  "description": "PantryOS - Gestione della dispensa per Home Assistant",
-  "main": "pantryos/pantryos/app/server/server.js",
+  "version": "1.0.1",
+  "description": "PantryOS repository wrapper for the Home Assistant addon",
+  "main": "pantryos/app/server/pantryos-server.js",
   "scripts": {
-    "start": "node pantryos/pantryos/app/server/server.js",
-    "dev": "NODE_ENV=development APP_PORT=3000 APP_DATA_FILE=./data/state.json node pantryos/pantryos/app/server/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint .",
-    "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
-    "docs:generate": "node -e \"require('./pantrios/pantryos/app/server/middleware/swagger').generateSwaggerDocs()\"",
+    "start": "./start.sh",
+    "dev": "./start.sh",
+    "stop": "./stop.sh",
+    "restart": "./restart.sh",
+    "addon:build": "./build-addon.sh",
+    "test": "node scripts/ci/validate-addon.js",
+    "test:smoke": "node scripts/ci/smoke-health.js",
+    "lint": "echo \"Lint not configured yet\"",
+    "format": "prettier --write \"**/*.{js,json,md,yaml,yml,sh}\"",
+    "docs:generate": "node -e \"require('./pantryos/app/server/middleware/swagger').generateSwaggerDocs()\"",
     "docs:serve": "NODE_ENV=development APP_PORT=3000 swagger-ui-watcher ./docs/openapi.json -p 3001"
   },
   "dependencies": {
@@ -42,7 +46,7 @@
     "inventory",
     "home-automation"
   ],
-  "author": "",
+  "author": "llingua",
   "license": "MIT",
   "repository": {
     "type": "git",

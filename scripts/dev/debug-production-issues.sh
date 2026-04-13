@@ -283,7 +283,7 @@ suggest_solutions() {
     echo "========================="
     echo ""
     echo "1. 🚀 AVVIA SIMULAZIONE PRODUZIONE:"
-    echo "   ./simulate-production.sh start"
+    echo "   ./scripts/dev/simulate-production.sh start"
     echo ""
     echo "2. 🔧 USA VARIABILI AMBIENTE CORRETTE:"
     echo "   export APP_HOST=0.0.0.0"

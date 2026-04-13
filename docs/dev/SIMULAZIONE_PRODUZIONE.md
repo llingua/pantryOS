@@ -40,64 +40,64 @@ Risolvere i problemi comuni tra ambiente locale e produzione HA identificando e 
 
 ## 🚀 Script Disponibili
 
-### 1. `simulate-production.sh`
+### 1. `scripts/dev/simulate-production.sh`
 
 Simula l'ambiente di produzione HA completo.
 
 ```bash
 # Avvia simulazione completa
-./simulate-production.sh start
+./scripts/dev/simulate-production.sh start
 
 # Solo PantryOS (senza HA Core)
-./simulate-production.sh start --pantryos-only
+./scripts/dev/simulate-production.sh start --pantryos-only
 
 # Monitora logs
-./simulate-production.sh logs
+./scripts/dev/simulate-production.sh logs
 
 # Test API
-./simulate-production.sh test
+./scripts/dev/simulate-production.sh test
 
 # Shell container
-./simulate-production.sh shell
+./scripts/dev/simulate-production.sh shell
 
 # Stop simulazione
-./simulate-production.sh stop
+./scripts/dev/simulate-production.sh stop
 ```
 
-### 2. `debug-production-issues.sh`
+### 2. `scripts/dev/debug-production-issues.sh`
 
 Diagnostica problemi comuni tra locale e produzione.
 
 ```bash
 # Diagnostica completa
-./debug-production-issues.sh full
+./scripts/dev/debug-production-issues.sh full
 
 # Solo configurazione
-./debug-production-issues.sh config
+./scripts/dev/debug-production-issues.sh config
 
 # Simula problemi comuni
-./debug-production-issues.sh issues
+./scripts/dev/debug-production-issues.sh issues
 
 # Genera report
-./debug-production-issues.sh report
+./scripts/dev/debug-production-issues.sh report
 
 # Suggerimenti
-./debug-production-issues.sh suggestions
+./scripts/dev/debug-production-issues.sh suggestions
 ```
 
-### 3. `test-production-env.sh`
+### 3. `scripts/dev/test-production-env.sh`
 
 Testa l'ambiente di produzione con variabili specifiche HA.
 
 ```bash
 # Tutti i test
-./test-production-env.sh all
+./scripts/dev/test-production-env.sh all
 
 # Test specifici
-./test-production-env.sh env      # Variabili d'ambiente
-./test-production-env.sh files    # File e directory
-./test-production-env.sh ha       # Configurazione HA
-./test-production-env.sh docker   # Docker
+./scripts/dev/test-production-env.sh env      # Variabili d'ambiente
+./scripts/dev/test-production-env.sh files    # File e directory
+./scripts/dev/test-production-env.sh ha       # Configurazione HA
+./scripts/dev/test-production-env.sh docker   # Docker
 ```
 
 ## 🐳 Configurazione Docker
@@ -204,40 +204,40 @@ curl http://localhost:8080/health
 
 ```bash
 # Esegui diagnostica
-./debug-production-issues.sh full
+./scripts/dev/debug-production-issues.sh full
 
 # Testa ambiente
-./test-production-env.sh all
+./scripts/dev/test-production-env.sh all
 ```
 
 ### 2. **Simulazione**
 
 ```bash
 # Avvia simulazione produzione
-./simulate-production.sh start
+./scripts/dev/simulate-production.sh start
 
 # Monitora logs
-./simulate-production.sh logs
+./scripts/dev/simulate-production.sh logs
 ```
 
 ### 3. **Test**
 
 ```bash
 # Test API
-./simulate-production.sh test
+./scripts/dev/simulate-production.sh test
 
 # Debug se necessario
-./simulate-production.sh shell
+./scripts/dev/simulate-production.sh shell
 ```
 
 ### 4. **Risoluzione Problemi**
 
 ```bash
 # Genera report
-./debug-production-issues.sh report
+./scripts/dev/debug-production-issues.sh report
 
 # Suggerimenti
-./debug-production-issues.sh suggestions
+./scripts/dev/debug-production-issues.sh suggestions
 ```
 
 ## 🔍 Troubleshooting
@@ -321,10 +321,10 @@ Dopo aver seguito questo workflow dovresti avere:
 
 Se incontri problemi:
 
-1. Esegui `./debug-production-issues.sh full`
-2. Genera report con `./debug-production-issues.sh report`
-3. Controlla logs con `./simulate-production.sh logs`
-4. Usa debug avanzato con `./simulate-production.sh shell`
+1. Esegui `./scripts/dev/debug-production-issues.sh full`
+2. Genera report con `./scripts/dev/debug-production-issues.sh report`
+3. Controlla logs con `./scripts/dev/simulate-production.sh logs`
+4. Usa debug avanzato con `./scripts/dev/simulate-production.sh shell`
 
 ---
 

@@ -199,10 +199,10 @@ run_all_tests() {
     echo "🚀 PRONTO PER SIMULAZIONE PRODUZIONE!"
     echo ""
     echo "Per avviare la simulazione:"
-    echo "  ./simulate-production.sh start"
+    echo "  ./scripts/dev/simulate-production.sh start"
     echo ""
     echo "Per monitorare i logs:"
-    echo "  ./simulate-production.sh logs"
+    echo "  ./scripts/dev/simulate-production.sh logs"
     echo ""
 }
 
