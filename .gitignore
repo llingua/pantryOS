@@ -5,3 +5,16 @@ node_modules/
 __pycache__/
 *.pyc
 
+# Local macOS/dev clutter
+.DS_Store
+logs/
+server.pid
+
+# Local build artifacts
+dist/
+*.tar.gz
+*.sha256
+*.asc
+
+# Generated runtime state kept outside Git
+pantryos/app/data/state.json
