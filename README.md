@@ -53,7 +53,7 @@ npm run addon:build
 - Porta interna addon: `8099`
 - Healthcheck addon: `/api/health`
 - Dati persistenti addon: `/data/pantryos`
-- UI corrente consigliata per test: accesso diretto via porta esposta, non Ingress
+- UI corrente consigliata: HTTP interno sulla porta 8099 dietro reverse proxy HTTPS
 
 ## Note organizzative
 

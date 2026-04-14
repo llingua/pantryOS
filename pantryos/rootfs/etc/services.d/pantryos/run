@@ -10,9 +10,6 @@ export APP_CONFIG_FILE="${APP_CONFIG_FILE:-/data/pantryos/config.json}"
 export APP_SCHEMA_FILE="${APP_SCHEMA_FILE:-/opt/pantryos/data/schema.json}"
 export APP_PUBLIC_DIR="${APP_PUBLIC_DIR:-/opt/pantryos/public}"
 export APP_BASE_PATH="${APP_BASE_PATH:-/}"
-export APP_SSL="${APP_SSL:-true}"
-export APP_SSL_CERT="${APP_SSL_CERT:-/ssl/fullchain.pem}"
-export APP_SSL_KEY="${APP_SSL_KEY:-/ssl/privkey.pem}"
 
 echo "[run] Starting PantryOS on port ${APP_PORT}"
 exec node server/pantryos-server.js

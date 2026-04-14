@@ -35,12 +35,12 @@ function main() {
 
     const configYaml = readText('pantryos/config.yaml');
     assert(/slug:\s*pantryos/.test(configYaml), 'config.yaml must declare slug pantryos');
-    assert(/webui:\s*"?\[PROTO:ssl\]:\/\/\[HOST\]:\[PORT:8099\]\/"?/.test(configYaml), 'config.yaml must expose a direct SSL webui on port 8099');
+    assert(/webui:\s*"http:\/\/\[HOST\]:\[PORT:8099\]\/"/.test(configYaml), 'config.yaml must expose a direct webui on port 8099');
     assert(/ports:\s*\n\s+8099\/tcp:\s*8099/.test(configYaml), 'config.yaml must publish TCP port 8099');
 
     const dockerfile = readText('pantryos/Dockerfile');
     assert(dockerfile.includes('APP_DATA_FILE=/data/pantryos/state.json'), 'Dockerfile must configure APP_DATA_FILE');
-    assert(dockerfile.includes('https://127.0.0.1:8099/api/health'), 'Dockerfile healthcheck must target /api/health on port 8099');
+    assert(dockerfile.includes('http://127.0.0.1:8099/api/health'), 'Dockerfile healthcheck must target /api/health on port 8099');
 
     const runScript = readText('pantryos/rootfs/etc/services.d/pantryos/run');
     assert(runScript.includes('node server/pantryos-server.js'), 's6 run script must start pantryos-server.js');
