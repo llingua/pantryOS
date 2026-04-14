@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
@@ -15,6 +16,9 @@ const BASE_PATH_RAW = process.env.APP_BASE_PATH || '/';
 const BASE_PATH = BASE_PATH_RAW === '/' ? '' : BASE_PATH_RAW.replace(/\/$/, '');
 const LOG_LEVEL = (process.env.APP_LOG_LEVEL || 'info').toLowerCase();
 const CONFIG_FILE = process.env.APP_CONFIG_FILE || path.join(__dirname, '../data/config.json');
+const APP_SSL = process.env.APP_SSL === 'true';
+const SSL_CERT_FILE = process.env.APP_SSL_CERT || '/ssl/fullchain.pem';
+const SSL_KEY_FILE = process.env.APP_SSL_KEY || '/ssl/privkey.pem';
 const SCHEMA_CANDIDATE_FILES = [
     SCHEMA_FILE,
     path.join(process.cwd(), 'data', 'schema.json'),
@@ -1015,12 +1019,13 @@ function resolveStaticPath(requestPath) {
 
 function getRequestOrigin(req) {
     const hostHeader = req.headers.host;
+    const protocol = APP_SSL ? 'https' : 'http';
 
     if (hostHeader && /^[a-z0-9.\-:[\]]+$/i.test(hostHeader)) {
-        return `http://${hostHeader}`;
+        return `${protocol}://${hostHeader}`;
     }
 
-    return `http://${HOST}:${PORT}`;
+    return `${protocol}://${HOST}:${PORT}`;
 }
 
 function getRequestUrl(req) {
@@ -1033,8 +1038,7 @@ function getRequestUrl(req) {
     return rawUrl;
 }
 
-// Server principale
-const server = http.createServer(async (req, res) => {
+async function requestHandler(req, res) {
     setSecurityHeaders(res);
 
     const parsedUrl = new URL(getRequestUrl(req), getRequestOrigin(req));
@@ -1062,7 +1066,22 @@ const server = http.createServer(async (req, res) => {
 
     const filePath = resolveStaticPath(pathname);
     await serveStaticFile(req, res, filePath);
-});
+}
+
+function createServer() {
+    if (!APP_SSL) {
+        return http.createServer(requestHandler);
+    }
+
+    const sslOptions = {
+        cert: fs.readFileSync(SSL_CERT_FILE),
+        key: fs.readFileSync(SSL_KEY_FILE),
+    };
+
+    return https.createServer(sslOptions, requestHandler);
+}
+
+const server = createServer();
 
 // Inizializzazione
 async function initialize() {
@@ -1074,7 +1093,8 @@ async function initialize() {
 // Avvio server
 initialize().then(() => {
     server.listen(PORT, HOST, () => {
-        log('info', `PantryOS full-featured server listening on http://${HOST}:${PORT}${BASE_PATH || ''}`);
+        const protocol = APP_SSL ? 'https' : 'http';
+        log('info', `PantryOS full-featured server listening on ${protocol}://${HOST}:${PORT}${BASE_PATH || ''}`);
     });
 });
 
