@@ -1033,9 +1033,27 @@ function getRequestUrl(req) {
     return rawUrl;
 }
 
+function maybeRedirectNormalizedUrl(req, res) {
+    const rawUrl = typeof req.url === 'string' && req.url.length > 0 ? req.url : '/';
+
+    if (!rawUrl.startsWith('//')) {
+        return false;
+    }
+
+    const normalizedUrl = rawUrl.replace(/^\/+/, '/');
+    res.statusCode = 302;
+    res.setHeader('Location', normalizedUrl);
+    res.end();
+    return true;
+}
+
 // Server principale
 const server = http.createServer(async (req, res) => {
     setSecurityHeaders(res);
+
+    if ((req.method === 'GET' || req.method === 'HEAD') && maybeRedirectNormalizedUrl(req, res)) {
+        return;
+    }
 
     const parsedUrl = new URL(getRequestUrl(req), getRequestOrigin(req));
     let pathname = parsedUrl.pathname;
