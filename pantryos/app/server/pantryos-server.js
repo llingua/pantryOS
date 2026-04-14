@@ -15,6 +15,11 @@ const BASE_PATH_RAW = process.env.APP_BASE_PATH || '/';
 const BASE_PATH = BASE_PATH_RAW === '/' ? '' : BASE_PATH_RAW.replace(/\/$/, '');
 const LOG_LEVEL = (process.env.APP_LOG_LEVEL || 'info').toLowerCase();
 const CONFIG_FILE = process.env.APP_CONFIG_FILE || path.join(__dirname, '../data/config.json');
+const SCHEMA_CANDIDATE_FILES = [
+    SCHEMA_FILE,
+    path.join(process.cwd(), 'data', 'schema.json'),
+    path.join(__dirname, '../data/schema.json'),
+];
 
 let CONFIG = {
     culture: process.env.APP_CULTURE || 'en',
@@ -73,14 +78,21 @@ function log(level, message, metadata) {
 
 // Carica schema iniziale
 async function loadSchema() {
-    try {
-        const schemaData = await fs.promises.readFile(SCHEMA_FILE, 'utf-8');
-        SCHEMA = JSON.parse(schemaData);
-        log('info', 'Schema PantryOS caricato');
-    } catch (err) {
-        log('warning', 'Schema non trovato, uso schema vuoto');
-        SCHEMA = {};
+    for (const candidate of SCHEMA_CANDIDATE_FILES) {
+        try {
+            const schemaData = await fs.promises.readFile(candidate, 'utf-8');
+            SCHEMA = JSON.parse(schemaData);
+            log('info', 'Schema PantryOS caricato', { path: candidate });
+            return;
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                log('warning', 'Errore durante il caricamento dello schema', { path: candidate, error: err.message });
+            }
+        }
     }
+
+    log('warning', 'Schema non trovato, uso schema vuoto', { candidates: SCHEMA_CANDIDATE_FILES });
+    SCHEMA = {};
 }
 
 // Config load/save
@@ -1001,11 +1013,31 @@ function resolveStaticPath(requestPath) {
     return path.join(PUBLIC_DIR, resolved);
 }
 
+function getRequestOrigin(req) {
+    const hostHeader = req.headers.host;
+
+    if (hostHeader && /^[a-z0-9.\-:[\]]+$/i.test(hostHeader)) {
+        return `http://${hostHeader}`;
+    }
+
+    return `http://${HOST}:${PORT}`;
+}
+
+function getRequestUrl(req) {
+    const rawUrl = typeof req.url === 'string' && req.url.length > 0 ? req.url : '/';
+
+    if (rawUrl.startsWith('//')) {
+        return '/';
+    }
+
+    return rawUrl;
+}
+
 // Server principale
 const server = http.createServer(async (req, res) => {
     setSecurityHeaders(res);
 
-    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+    const parsedUrl = new URL(getRequestUrl(req), getRequestOrigin(req));
     let pathname = parsedUrl.pathname;
     if (BASE_PATH && pathname.startsWith(BASE_PATH)) {
         pathname = pathname.slice(BASE_PATH.length) || '/';
