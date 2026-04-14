@@ -53,7 +53,7 @@ npm run addon:build
 - Porta interna addon: `8099`
 - Healthcheck addon: `/api/health`
 - Dati persistenti addon: `/data/pantryos`
-- UI corrente consigliata: HTTP interno sulla porta 8099 dietro reverse proxy HTTPS
+- UI corrente consigliata: Ingress Home Assistant
 
 ## Note organizzative
 

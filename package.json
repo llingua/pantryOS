@@ -1,6 +1,6 @@
 {
   "name": "pantryos",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "PantryOS repository wrapper for the Home Assistant addon",
   "main": "pantryos/app/server/pantryos-server.js",
   "scripts": {

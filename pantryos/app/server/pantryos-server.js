@@ -213,7 +213,7 @@ function mutateState(mutator) {
 
 // Headers di sicurezza
 function setSecurityHeaders(res) {
-    const scriptSrc = "'self'";
+    const scriptSrc = "'self' 'unsafe-inline'";
     const styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net";
     res.setHeader('Content-Security-Policy', [
         `default-src 'self'`,

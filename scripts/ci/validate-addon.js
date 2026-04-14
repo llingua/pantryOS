@@ -35,8 +35,8 @@ function main() {
 
     const configYaml = readText('pantryos/config.yaml');
     assert(/slug:\s*pantryos/.test(configYaml), 'config.yaml must declare slug pantryos');
-    assert(/webui:\s*"http:\/\/\[HOST\]:\[PORT:8099\]\/"/.test(configYaml), 'config.yaml must expose a direct webui on port 8099');
-    assert(/ports:\s*\n\s+8099\/tcp:\s*8099/.test(configYaml), 'config.yaml must publish TCP port 8099');
+    assert(/ingress:\s*true/.test(configYaml), 'config.yaml must enable ingress');
+    assert(/ingress_port:\s*8099/.test(configYaml), 'config.yaml must expose ingress port 8099');
 
     const dockerfile = readText('pantryos/Dockerfile');
     assert(dockerfile.includes('APP_DATA_FILE=/data/pantryos/state.json'), 'Dockerfile must configure APP_DATA_FILE');

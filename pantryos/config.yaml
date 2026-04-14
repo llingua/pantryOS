@@ -1,9 +1,8 @@
 ---
 name: PantryOS
-version: "dev-35"
+version: "dev-36"
 description: Gestione della dispensa con interfaccia React
 url: https://github.com/llingua/pantryos
-webui: "http://[HOST]:[PORT:8099]/"
 slug: pantryos
 arch:
   - aarch64
@@ -17,14 +16,13 @@ init: false
 hassio_api: true
 homeassistant_api: true
 host_network: false
-ingress: false
+ingress: true
+ingress_port: 8099
+ingress_entry: /
 panel_icon: mdi:food
 panel_title: PantryOS
 panel_admin: true
-ports:
-  8099/tcp: 8099
-ports_description:
-  8099/tcp: Interfaccia web diretta PantryOS
+ports: {}
 map:
   - config:rw
   - ssl:ro
