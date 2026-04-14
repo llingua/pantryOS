@@ -1,9 +1,9 @@
 ---
 name: PantryOS
-version: "dev-32"
+version: "dev-33"
 description: Gestione della dispensa con interfaccia React
 url: https://github.com/llingua/pantryos
-webui: [PROTO:ssl]://[HOST]:[PORT:8099]/
+webui: "[PROTO:ssl]://[HOST]:[PORT:8099]/"
 slug: pantryos
 arch:
   - aarch64
