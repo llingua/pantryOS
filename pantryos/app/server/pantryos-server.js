@@ -19,11 +19,13 @@ const CONFIG_FILE = process.env.APP_CONFIG_FILE || path.join(__dirname, '../data
 const APP_SSL = process.env.APP_SSL === 'true';
 const SSL_CERT_FILE = process.env.APP_SSL_CERT || '/ssl/fullchain.pem';
 const SSL_KEY_FILE = process.env.APP_SSL_KEY || '/ssl/privkey.pem';
-const SCHEMA_CANDIDATE_FILES = [
+const SCHEMA_CANDIDATE_FILES = Array.from(new Set([
     SCHEMA_FILE,
     path.join(process.cwd(), 'data', 'schema.json'),
+    path.join(process.cwd(), 'app', 'data', 'schema.json'),
     path.join(__dirname, '../data/schema.json'),
-];
+    path.join(__dirname, '../../app/data/schema.json'),
+]));
 
 let CONFIG = {
     culture: process.env.APP_CULTURE || 'en',

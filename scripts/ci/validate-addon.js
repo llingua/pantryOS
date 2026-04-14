@@ -40,7 +40,7 @@ function main() {
 
     const dockerfile = readText('pantryos/Dockerfile');
     assert(dockerfile.includes('APP_DATA_FILE=/data/pantryos/state.json'), 'Dockerfile must configure APP_DATA_FILE');
-    assert(dockerfile.includes('http://127.0.0.1:8099/api/health'), 'Dockerfile healthcheck must target /api/health on port 8099');
+    assert(dockerfile.includes('https://127.0.0.1:8099/api/health'), 'Dockerfile healthcheck must target /api/health on port 8099');
 
     const runScript = readText('pantryos/rootfs/etc/services.d/pantryos/run');
     assert(runScript.includes('node server/pantryos-server.js'), 's6 run script must start pantryos-server.js');

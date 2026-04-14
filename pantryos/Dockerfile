@@ -72,4 +72,4 @@ LABEL io.hass.name="${BUILD_NAME}" \
       org.opencontainers.image.version=${BUILD_VERSION}
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget -q --spider http://127.0.0.1:8099/api/health || curl -fsS http://127.0.0.1:8099/api/health || exit 1
+  CMD wget --no-check-certificate -q --spider https://127.0.0.1:8099/api/health || curl -k -fsS https://127.0.0.1:8099/api/health || exit 1
