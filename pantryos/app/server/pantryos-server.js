@@ -212,14 +212,14 @@ function mutateState(mutator) {
 // Headers di sicurezza
 function setSecurityHeaders(res) {
     const scriptSrc = "'self'";
-    const styleSrc = "'self' 'unsafe-inline'";
+    const styleSrc = "'self' 'unsafe-inline' https://cdn.jsdelivr.net";
     res.setHeader('Content-Security-Policy', [
         `default-src 'self'`,
         `script-src ${scriptSrc}`,
         `style-src ${styleSrc}`,
         `connect-src 'self'`,
         `img-src 'self' data:`,
-        `font-src 'self'`,
+        `font-src 'self' https://cdn.jsdelivr.net`,
         `object-src 'none'`,
         `base-uri 'self'`,
         `frame-ancestors 'self'`,
@@ -1027,7 +1027,7 @@ function getRequestUrl(req) {
     const rawUrl = typeof req.url === 'string' && req.url.length > 0 ? req.url : '/';
 
     if (rawUrl.startsWith('//')) {
-        return '/';
+        return rawUrl.replace(/^\/+/, '/');
     }
 
     return rawUrl;
